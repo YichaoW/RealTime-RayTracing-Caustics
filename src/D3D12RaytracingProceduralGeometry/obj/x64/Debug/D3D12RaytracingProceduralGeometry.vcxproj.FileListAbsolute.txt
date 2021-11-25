@@ -1,0 +1,3 @@
+C:\Users\franc\Desktop\DirectX-Graphics-Samples\Samples\Desktop\D3D12Raytracing\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\WinPixEventRuntime.dll
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\D3D12RaytracingProceduralGeometry\bin\x64\Debug\WinPixEventRuntime.dll
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\WinPixEventRuntime.dll

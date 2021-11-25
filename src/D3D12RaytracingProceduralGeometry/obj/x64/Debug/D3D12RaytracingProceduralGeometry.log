@@ -1,0 +1,11 @@
+﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
+  
+  stdafx.cpp
+  D3D12RaytracingProceduralGeometry.cpp
+  Main.cpp
+  DeviceResources.cpp
+  DXSample.cpp
+  PerformanceTimers.cpp
+  Win32Application.cpp
+  Generating Code...
+  D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe
