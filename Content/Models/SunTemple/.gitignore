@@ -1,6 +1,0 @@
-## Exclusions for SunTemple
-Textures/*.dds
-Textures/*.tga
-!Textures/T_M_Tree_Branches_0_A.dds
-!Textures/T_M_Tree_Branches_Inst_0_A.dds
-!Textures/T_Soul_Tree011M_Inst_0_A.dds
