@@ -154,6 +154,11 @@ namespace AnalyticPrimitive {
     enum Enum {
         AABB = 0,
         Spheres,
+        Floor,
+        Ceiling,
+        LeftWall,
+        RightWall,
+        BackWall,
         Count
     };
 }

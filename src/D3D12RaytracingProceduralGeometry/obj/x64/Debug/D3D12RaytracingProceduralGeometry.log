@@ -1,2 +1,11 @@
 ﻿  D3D12RaytracingProceduralGeometry.cpp
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(147,57): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(171,74): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(172,77): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(173,78): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(174,77): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(175,76): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(840,66): warning C4244: 'argument': conversion from 'double' to 'int32_t', possible loss of data
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(840,100): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(841,98): warning C4305: 'argument': truncation from 'double' to 'float'
   D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe

@@ -144,6 +144,7 @@ void D3D12RaytracingProceduralGeometry::UpdateAABBPrimitiveAttributes(float anim
     XMMATRIX mScale15 = XMMatrixScaling(1.5, 1.5, 1.5);
     XMMATRIX mScale2 = XMMatrixScaling(2, 2, 2);
     XMMATRIX mScale3 = XMMatrixScaling(3, 3, 3);
+    XMMATRIX mScalePlane = XMMatrixScaling(100, 100, 0.1);
 
     XMMATRIX mRotation = XMMatrixRotationY(-2 * animationTime);
 
@@ -166,15 +167,22 @@ void D3D12RaytracingProceduralGeometry::UpdateAABBPrimitiveAttributes(float anim
     // Analytic primitives.
     {
         using namespace AnalyticPrimitive;
-        SetTransformForAABB(offset + AABB, mScale15y, mIdentity);
+       // SetTransformForAABB(offset + Spheres, mScale15y, mIdentity);
+        SetTransformForAABB(offset + Floor, XMMatrixScaling(100, 0.1, 100), mIdentity);
+        SetTransformForAABB(offset + BackWall, XMMatrixScaling(0.1, 100, 100), XMMatrixRotationY(90));
+        SetTransformForAABB(offset + RightWall, XMMatrixScaling(0.1, 100, 100), mIdentity);
+        SetTransformForAABB(offset + LeftWall, XMMatrixScaling(0.1, 100, 100), mIdentity);
+        SetTransformForAABB(offset + Ceiling, XMMatrixScaling(0.1, 100, 100), XMMatrixRotationZ(90));
+
         SetTransformForAABB(offset + Spheres, mScale15, mRotation);
+        
         offset += AnalyticPrimitive::Count;
     }
 
     // Volumetric primitives.
     {
         using namespace VolumetricPrimitive;
-        SetTransformForAABB(offset + Metaballs, mScale15, mRotation);
+ //       SetTransformForAABB(offset + Metaballs, mScale15, mRotation);
         offset += VolumetricPrimitive::Count;
     }
 
@@ -182,13 +190,13 @@ void D3D12RaytracingProceduralGeometry::UpdateAABBPrimitiveAttributes(float anim
     {
         using namespace SignedDistancePrimitive;
 
-        SetTransformForAABB(offset + MiniSpheres, mIdentity, mIdentity);
-        SetTransformForAABB(offset + IntersectedRoundCube, mIdentity, mIdentity);
-        SetTransformForAABB(offset + SquareTorus, mScale15, mIdentity);
-        SetTransformForAABB(offset + TwistedTorus, mIdentity, mRotation);
-        SetTransformForAABB(offset + Cog, mIdentity, mRotation);
-        SetTransformForAABB(offset + Cylinder, mScale15y, mIdentity);
-        SetTransformForAABB(offset + FractalPyramid, mScale3, mIdentity);
+        // SetTransformForAABB(offset + MiniSpheres, mIdentity, mIdentity);
+        // SetTransformForAABB(offset + IntersectedRoundCube, mIdentity, mIdentity);
+        // SetTransformForAABB(offset + SquareTorus, mScale15, mIdentity);
+        // SetTransformForAABB(offset + TwistedTorus, mIdentity, mRotation);
+        // SetTransformForAABB(offset + Cog, mIdentity, mRotation);
+        // SetTransformForAABB(offset + Cylinder, mScale15y, mIdentity);
+        // SetTransformForAABB(offset + FractalPyramid, mScale3, mIdentity);
     }
 }
 
@@ -226,33 +234,41 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         XMFLOAT4 green = XMFLOAT4(0.1f, 1.0f, 0.5f, 1.0f);
         XMFLOAT4 red = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
         XMFLOAT4 yellow = XMFLOAT4(1.0f, 1.0f, 0.5f, 1.0f);
-        
+        XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
         UINT offset = 0;
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            SetAttributes(offset + AABB, ChromiumReflectance,1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
-            SetAttributes(offset + Spheres, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
+            SetAttributes(offset + AABB, white);
+            SetAttributes(offset + Floor, white);
+            SetAttributes(offset + BackWall, white);
+            SetAttributes(offset + RightWall, white);
+            SetAttributes(offset + LeftWall, white);
+            SetAttributes(offset + Ceiling, white);
+
+            SetAttributes(offset + Spheres, ChromiumReflectance,1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
+            //SetAttributes(offset + Spheres, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
             offset += AnalyticPrimitive::Count;
         }
 
         // Volumetric primitives.
         {
             using namespace VolumetricPrimitive;
-            SetAttributes(offset + Metaballs, ChromiumReflectance, 1);
+            //SetAttributes(offset + Metaballs, ChromiumReflectance, 1);
             offset += VolumetricPrimitive::Count;
         }
 
         // Signed distance primitives.
         {
             using namespace SignedDistancePrimitive;
-            SetAttributes(offset + MiniSpheres, green);
-            SetAttributes(offset + IntersectedRoundCube, green);
-            SetAttributes(offset + SquareTorus, ChromiumReflectance, 1);
-            SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f );
-            SetAttributes(offset + Cog, yellow, 0, 1.0f, 0.1f, 2);
-            SetAttributes(offset + Cylinder,red);
-            SetAttributes(offset + FractalPyramid, green, 0, 1, 0.1f, 4, 0.8f);
+            // SetAttributes(offset + MiniSpheres, green);
+            // SetAttributes(offset + IntersectedRoundCube, green);
+            // SetAttributes(offset + SquareTorus, ChromiumReflectance, 1);
+            // SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f );
+            // SetAttributes(offset + Cog, yellow, 0, 1.0f, 0.1f, 2);
+            // SetAttributes(offset + Cylinder,red);
+            // SetAttributes(offset + FractalPyramid, green, 0, 1, 0.1f, 4, 0.8f);
         }
     }
 
@@ -817,11 +833,17 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         };
         m_aabbs.resize(IntersectionShaderType::TotalPrimitiveCount);
         UINT offset = 0;
-
+    
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+            m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
+            m_aabbs[offset + BackWall] = InitializeAABB(XMINT3(0, 0, -5), XMFLOAT3(0.01, 100, 100));       
+            m_aabbs[offset + RightWall] = InitializeAABB(XMINT3(10, 0, -10), XMFLOAT3(0.01, 100, 100));
+            m_aabbs[offset + LeftWall] = InitializeAABB(XMINT3(-10, 0, 0), XMFLOAT3(0.01, 100, 100));
+            m_aabbs[offset + Ceiling] = InitializeAABB(XMINT3(0, 100, 0), XMFLOAT3(0.01, 100, 100));
+
+            m_aabbs[offset + Spheres] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(3, 3, 3));
           //  m_aabbs[offset + Spheres] = InitializeAABB(XMFLOAT3(2.25f, 0, 0.75f), XMFLOAT3(3, 3, 3));
             offset += AnalyticPrimitive::Count;
         }
@@ -856,7 +878,6 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
     {
         3,1,0,
         2,1,3,
-
     };
 
     // Cube vertices positions and corresponding triangle normals.

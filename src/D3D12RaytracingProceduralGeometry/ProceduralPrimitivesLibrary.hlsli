@@ -40,6 +40,11 @@ bool RayAnalyticGeometryIntersectionTest(in Ray ray, in AnalyticPrimitive::Enum 
     switch (analyticPrimitive)
     {
     case AnalyticPrimitive::AABB: return RayAABBIntersectionTest(ray, aabb, thit, attr);
+    case AnalyticPrimitive::Floor: return RayAABBIntersectionTest(ray, aabb, thit, attr);
+    case AnalyticPrimitive::BackWall: return RayAABBIntersectionTest(ray, aabb, thit, attr);
+    case AnalyticPrimitive::Ceiling: return RayAABBIntersectionTest(ray, aabb, thit, attr);
+    case AnalyticPrimitive::LeftWall: return RayAABBIntersectionTest(ray, aabb, thit, attr);
+    case AnalyticPrimitive::RightWall: return RayAABBIntersectionTest(ray, aabb, thit, attr);
     case AnalyticPrimitive::Spheres: return RaySpheresIntersectionTest(ray, thit, attr);
     default: return false;
     }
