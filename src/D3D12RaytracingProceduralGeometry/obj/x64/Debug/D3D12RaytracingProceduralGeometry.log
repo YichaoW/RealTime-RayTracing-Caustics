@@ -1,3 +1,8 @@
-﻿C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\RaytracingHlslCompat.h(120,5-8): error X3000: syntax error: unexpected token 'enum'
+﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
-  compilation failed; no code produced
+  D3D12RaytracingProceduralGeometry.cpp
+  Main.cpp
+  Win32Application.cpp
+  Generating Code...
+  LINK : bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe not found or not built by the last incremental link; performing full link
+  D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe
