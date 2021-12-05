@@ -321,7 +321,7 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
     CreateRaytracingInterfaces();
 
     // Create root signatures for the shaders.
-    CreateRootSignatures(m_raytracing_res);
+    CreateRootSignatures();
     //CreateRootSignatures(m_photontracing_res);
 
     // Create a raytracing pipeline state object which defines the binding of shaders, state and resources to be used during raytracing.
@@ -361,7 +361,7 @@ void D3D12RaytracingProceduralGeometry::SerializeAndCreateRaytracingRootSignatur
     ThrowIfFailed(device->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&(*rootSig))));
 }
 
-void D3D12RaytracingProceduralGeometry::CreateRootSignatures(DXRResource res)
+void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
 {
     auto device = m_deviceResources->GetD3DDevice();
 
@@ -379,7 +379,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(DXRResource res)
         rootParameters[GlobalRootSignature::Slot::AABBattributeBuffer].InitAsShaderResourceView(3);
         rootParameters[GlobalRootSignature::Slot::VertexBuffers].InitAsDescriptorTable(1, &ranges[1]);
         CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-        SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &res.globalRootSignature);
+        SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &m_raytracing_res.globalRootSignature);
     }
 
     // Local Root Signature
@@ -393,7 +393,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(DXRResource res)
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &res.localRootSignature[LocalRootSignature::Type::Triangle]);
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_raytracing_res.localRootSignature[LocalRootSignature::Type::Triangle]);
         }
 
         // AABB geometry
@@ -405,7 +405,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(DXRResource res)
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &res.localRootSignature[LocalRootSignature::Type::AABB]);
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_raytracing_res.localRootSignature[LocalRootSignature::Type::AABB]);
         }
     }
 }
@@ -1653,8 +1653,8 @@ void D3D12RaytracingProceduralGeometry::OnRender()
         gpuTimer.BeginFrame(commandList);
     }
 
-    DoPhotontracing();
-    //DoRaytracing();
+    //DoPhotontracing();
+    DoRaytracing();
     CopyRaytracingOutputToBackbuffer();
 
     // End frame.
