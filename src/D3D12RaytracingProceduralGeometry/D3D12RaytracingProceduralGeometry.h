@@ -146,6 +146,7 @@ private:
     void CreateRaytracingInterfaces();
     void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
     void CreateRootSignatures();
+    void CreatePhotonRootSignatures();
     void CreateDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreatePhotonDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreateHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);

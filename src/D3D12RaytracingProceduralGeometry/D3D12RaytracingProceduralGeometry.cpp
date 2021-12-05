@@ -322,7 +322,7 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
 
     // Create root signatures for the shaders.
     CreateRootSignatures();
-    //CreateRootSignatures(m_photontracing_res);
+    //CreatePhotonRootSignatures();
 
     // Create a raytracing pipeline state object which defines the binding of shaders, state and resources to be used during raytracing.
     CreateRaytracingPipelineStateObject();
@@ -406,6 +406,55 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
             SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_raytracing_res.localRootSignature[LocalRootSignature::Type::AABB]);
+        }
+    }
+}
+
+void D3D12RaytracingProceduralGeometry::CreatePhotonRootSignatures()
+{
+    auto device = m_deviceResources->GetD3DDevice();
+
+    // Global Root Signature
+    // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
+    {
+        CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Perfomance TIP: Order from most frequent to least frequent.
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
+
+        CD3DX12_ROOT_PARAMETER rootParameters[GlobalRootSignature::Slot::Count];
+        rootParameters[GlobalRootSignature::Slot::OutputView].InitAsDescriptorTable(1, &ranges[0]);
+        rootParameters[GlobalRootSignature::Slot::AccelerationStructure].InitAsShaderResourceView(0);
+        rootParameters[GlobalRootSignature::Slot::SceneConstant].InitAsConstantBufferView(0);
+        rootParameters[GlobalRootSignature::Slot::AABBattributeBuffer].InitAsShaderResourceView(3);
+        rootParameters[GlobalRootSignature::Slot::VertexBuffers].InitAsDescriptorTable(1, &ranges[1]);
+        CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+        SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &m_photontracing_res.globalRootSignature);
+    }
+
+    // Local Root Signature
+    // This is a root signature that enables a shader to have unique arguments that come from shader tables.
+    {
+        // Triangle geometry
+        {
+            namespace RootSignatureSlots = LocalRootSignature::Triangle::Slot;
+            CD3DX12_ROOT_PARAMETER rootParameters[RootSignatureSlots::Count];
+            rootParameters[RootSignatureSlots::MaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 1);
+
+            CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_photontracing_res.localRootSignature[LocalRootSignature::Type::Triangle]);
+        }
+
+        // AABB geometry
+        {
+            namespace RootSignatureSlots = LocalRootSignature::AABB::Slot;
+            CD3DX12_ROOT_PARAMETER rootParameters[RootSignatureSlots::Count];
+            rootParameters[RootSignatureSlots::MaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 1);
+            rootParameters[RootSignatureSlots::GeometryIndex].InitAsConstants(SizeOfInUint32(PrimitiveInstanceConstantBuffer), 2);
+
+            CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_photontracing_res.localRootSignature[LocalRootSignature::Type::AABB]);
         }
     }
 }
