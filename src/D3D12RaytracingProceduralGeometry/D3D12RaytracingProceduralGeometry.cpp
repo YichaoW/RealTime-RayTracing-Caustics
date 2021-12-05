@@ -12,6 +12,7 @@
 #include "stdafx.h"
 #include "D3D12RaytracingProceduralGeometry.h"
 #include "CompiledShaders\Raytracing.hlsl.h"
+#include "CompiledShaders\Photontracing.hlsl.h"
 
 using namespace std;
 using namespace DX;
@@ -84,8 +85,8 @@ D3D12RaytracingProceduralGeometry::D3D12RaytracingProceduralGeometry(UINT width,
     m_animateLight(false),
     m_descriptorsAllocated(0),
     m_descriptorSize(0),
-    m_missShaderTableStrideInBytes(UINT_MAX),
-    m_hitGroupShaderTableStrideInBytes(UINT_MAX)
+    m_raytracing_res(),
+    m_photontracing_res()
 {
     UpdateForSizeChange(width, height);
 }
@@ -312,9 +313,6 @@ void D3D12RaytracingProceduralGeometry::CreateAABBPrimitiveAttributesBuffers()
 // Create resources that depend on the device.
 void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
 {
-    m_raytracing_res = {};
-    m_photontracing_res = {};
-
     CreateAuxilaryDeviceResources();
 
     // Initialize raytracing pipeline.
@@ -433,6 +431,17 @@ void D3D12RaytracingProceduralGeometry::CreateDxilLibrarySubobject(CD3DX12_STATE
     // Use default shader exports for a DXIL library/collection subobject ~ surface all shaders.
 }
 
+// DXIL library
+// This contains the shaders and their entrypoints for the state object.
+// Since shaders are not considered a subobject, they need to be passed in via DXIL library subobjects.
+void D3D12RaytracingProceduralGeometry::CreatePhotonDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline)
+{
+    auto lib = raytracingPipeline->CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void*)g_pPhotontracing, ARRAYSIZE(g_pPhotontracing));
+    lib->SetDXILLibrary(&libdxil);
+    // Use default shader exports for a DXIL library/collection subobject ~ surface all shaders.
+}
+
 // Hit groups
 // A hit group specifies closest hit, any hit and intersection shaders 
 // to be executed when a ray intersects the geometry.
@@ -518,7 +527,7 @@ void D3D12RaytracingProceduralGeometry::CreateLocalRootSignatureSubobjects(CD3DX
     // Triangle geometry
     {
         auto localRootSignature = raytracingPipeline->CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-        localRootSignature->SetRootSignature(m_raytracingLocalRootSignature[LocalRootSignature::Type::Triangle].Get());
+        localRootSignature->SetRootSignature(m_raytracing_res.localRootSignature[LocalRootSignature::Type::Triangle].Get());
         // Shader association
         auto rootSignatureAssociation = raytracingPipeline->CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
         rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
@@ -528,7 +537,7 @@ void D3D12RaytracingProceduralGeometry::CreateLocalRootSignatureSubobjects(CD3DX
     // AABB geometry
     {
         auto localRootSignature = raytracingPipeline->CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-        localRootSignature->SetRootSignature(m_raytracingLocalRootSignature[LocalRootSignature::Type::AABB].Get());
+        localRootSignature->SetRootSignature(m_raytracing_res.localRootSignature[LocalRootSignature::Type::AABB].Get());
         // Shader association
         auto rootSignatureAssociation = raytracingPipeline->CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
         rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
@@ -550,7 +559,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonLocalRootSignatureSubobjects
     // Triangle geometry
     {
         auto localRootSignature = raytracingPipeline->CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-        localRootSignature->SetRootSignature(m_photontracingLocalRootSignature[LocalRootSignature::Type::Triangle].Get());
+        localRootSignature->SetRootSignature(m_photontracing_res.localRootSignature[LocalRootSignature::Type::Triangle].Get());
         // Shader association
         auto rootSignatureAssociation = raytracingPipeline->CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
         rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
@@ -560,7 +569,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonLocalRootSignatureSubobjects
     // AABB geometry
     {
         auto localRootSignature = raytracingPipeline->CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-        localRootSignature->SetRootSignature(m_photontracingLocalRootSignature[LocalRootSignature::Type::AABB].Get());
+        localRootSignature->SetRootSignature(m_photontracing_res.localRootSignature[LocalRootSignature::Type::AABB].Get());
         // Shader association
         auto rootSignatureAssociation = raytracingPipeline->CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
         rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
@@ -609,7 +618,7 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingPipelineStateObject()
     // Global root signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-    globalRootSignature->SetRootSignature(m_raytracingGlobalRootSignature.Get());
+    globalRootSignature->SetRootSignature(m_raytracing_res.globalRootSignature.Get());
 
     // Pipeline config
     // Defines the maximum TraceRay() recursion depth.
@@ -644,10 +653,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotontracingPipelineStateObject()
     CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
     // DXIL library
-    //CreateDxilLibrarySubobject(&raytracingPipeline);
-    auto lib = raytracingPipeline->CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-    D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void *)g_pPhotontracing, ARRAYSIZE(g_pPhotontracing));
-    lib->SetDXILLibrary(&libdxil);
+    CreatePhotonDxilLibrarySubobject(&raytracingPipeline);
 
     // Hit groups
     CreatePhotonHitGroupSubobjects(&raytracingPipeline);
@@ -666,7 +672,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotontracingPipelineStateObject()
     // Global root signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-    globalRootSignature->SetRootSignature(m_photonGlobalRootSignature.Get());
+    globalRootSignature->SetRootSignature(m_photontracing_res.globalRootSignature.Get());
 
     // Pipeline config
     // Defines the maximum TraceRay() recursion depth.
@@ -1579,19 +1585,20 @@ void D3D12RaytracingProceduralGeometry::ReleaseDeviceDependentResources()
         gpuTimer.ReleaseDevice();
     }
 
-    m_raytracingGlobalRootSignature.Reset();
-    ResetComPtrArray(&m_raytracingLocalRootSignature);
-    m_photontracingGlobalRootSignature.Reset();
-    ResetComPtrArray(&m_photontracingGlobalRootSignature);
+    m_raytracing_res.globalRootSignature.Reset();
+    ResetComPtrArray(&m_raytracing_res.localRootSignature);
+    m_photontracing_res.globalRootSignature.Reset();
+    ResetComPtrArray(&m_photontracing_res.localRootSignature);
 
     m_dxrDevice.Reset();
     m_dxrCommandList.Reset();
-    m_dxrStateObject.Reset();
+    m_raytracing_res.dxrStateObject.Reset();
+    m_photontracing_res.dxrStateObject.Reset();
 
-    m_raytracingGlobalRootSignature.Reset();
-    ResetComPtrArray(&m_raytracingLocalRootSignature);
-    m_photontracingGlobalRootSignature.Reset();
-    ResetComPtrArray(&m_photontracingGlobalRootSignature);
+    m_raytracing_res.globalRootSignature.Reset();
+    ResetComPtrArray(&m_raytracing_res.localRootSignature);
+    m_photontracing_res.globalRootSignature.Reset();
+    ResetComPtrArray(&m_photontracing_res.localRootSignature);
 
     m_descriptorHeap.Reset();
     m_descriptorsAllocated = 0;
@@ -1606,9 +1613,12 @@ void D3D12RaytracingProceduralGeometry::ReleaseDeviceDependentResources()
 
     m_raytracingOutput.Reset();
     m_raytracingOutputResourceUAVDescriptorHeapIndex = UINT_MAX;
-    m_rayGenShaderTable.Reset();
-    m_missShaderTable.Reset();
-    m_hitGroupShaderTable.Reset();
+    m_raytracing_res.rayGenShaderTable.Reset();
+    m_raytracing_res.missShaderTable.Reset();
+    m_raytracing_res.hitGroupShaderTable.Reset();
+    m_photontracing_res.rayGenShaderTable.Reset();
+    m_photontracing_res.missShaderTable.Reset();
+    m_photontracing_res.hitGroupShaderTable.Reset();
 }
 
 void D3D12RaytracingProceduralGeometry::RecreateD3D()

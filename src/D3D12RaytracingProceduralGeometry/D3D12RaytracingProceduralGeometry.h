@@ -58,9 +58,9 @@ private:
 
         // Shader tables
         ComPtr<ID3D12Resource> missShaderTable;
-        UINT missShaderTableStrideInBytes;
+        UINT missShaderTableStrideInBytes = UINT_MAX;
         ComPtr<ID3D12Resource> hitGroupShaderTable;
-        UINT hitGroupShaderTableStrideInBytes;
+        UINT hitGroupShaderTableStrideInBytes = UINT_MAX;
         ComPtr<ID3D12Resource> rayGenShaderTable;
     };
 
@@ -108,6 +108,12 @@ private:
     static const wchar_t* c_closestHitShaderNames[GeometryType::Count];
     static const wchar_t* c_missShaderNames[RayType::Count];
 
+    static const wchar_t* c_hitGroupNames_TriangleGeometry_photon[RayType::Count];
+    static const wchar_t* c_hitGroupNames_AABBGeometry_photon[IntersectionShaderType::Count][RayType::Count];
+    static const wchar_t* c_raygenShaderName_photon;
+    static const wchar_t* c_intersectionShaderNames_photon[IntersectionShaderType::Count];
+    static const wchar_t* c_closestHitShaderNames_photon[GeometryType::Count];
+    static const wchar_t* c_missShaderNames_photon[RayType::Count];
     // ComPtr<ID3D12Resource> m_missShaderTable;
     // UINT m_missShaderTableStrideInBytes;
     // ComPtr<ID3D12Resource> m_hitGroupShaderTable;
@@ -141,6 +147,7 @@ private:
     void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
     void CreateRootSignatures(DXRResource res);
     void CreateDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
+    void CreatePhotonDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreateHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreatePhotonHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline); // photon tracing
     void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
