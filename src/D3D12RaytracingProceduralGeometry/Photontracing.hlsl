@@ -17,6 +17,7 @@
 //  l_* - bound via a local root signature.
 RaytracingAccelerationStructure g_scene : register(t0, space0);
 RWTexture2D<float4> g_renderTarget : register(u0);
+RWStructuredBuffer<Photon> g_buffer : register(u1);
 ConstantBuffer<SceneConstantBuffer> g_sceneCB : register(b0);
 
 // Triangle resources
@@ -35,6 +36,12 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 //***************************************************************************
 //****************------ Utility functions -------***************************
 //***************************************************************************
+void StorePhoton() {
+    // int index = DispatchRaysIndex().x;
+    // Photon p;
+    // p.throughput = float3(1, 0, 0);
+    // g_buffer[index] = p;
+}
 
 // Diffuse lighting calculation.
 float CalculateDiffuseCoefficient(in float3 hitPosition, in float3 incidentLightRay, in float3 normal)
@@ -158,6 +165,7 @@ bool TraceShadowRayAndReportIfHit(in Ray ray, in UINT currentRayRecursionDepth)
 [shader("raygeneration")]
 void MyRaygenShader_Photon()
 {
+    StorePhoton();
     // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
     Ray ray = GenerateCameraRay(DispatchRaysIndex().xy, g_sceneCB.cameraPosition.xyz, g_sceneCB.projectionToWorld);
  

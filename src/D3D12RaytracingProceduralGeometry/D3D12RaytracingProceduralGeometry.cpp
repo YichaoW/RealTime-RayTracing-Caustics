@@ -348,6 +348,7 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
     BuildPhotonShaderTables();
     BuildShaderTables();
 
+    CreatePhotonGBuffers();
     // Create an output 2D texture to store the raytracing result to.
     CreateRaytracingOutputResource();
 }
@@ -419,7 +420,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonRootSignatures()
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
         CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Perfomance TIP: Order from most frequent to least frequent.
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0);  // 1 output texture
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
 
         CD3DX12_ROOT_PARAMETER rootParameters[GlobalRootSignature::Slot::Count];
@@ -763,6 +764,15 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingOutputResource()
 void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     auto device = m_deviceResources->GetD3DDevice();
 
+    // int width = sqrt(NUM_PHOTONS);
+    // int height = width;
+    // if (NUM_PHOTONS % width != 0) {
+    //     height++;
+    // }
+    // UINT gwidth = min(D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION, sqrt(width));
+    // UINT gheight = min(D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION, height);
+    // auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, NUM_PHOTONS, NUM_PHOTONS, MAX_RAY_RECURSION_DEPTH, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
 
     D3D12_RESOURCE_ALLOCATION_INFO resDesc = {};
     resDesc.SizeInBytes = NUM_PHOTONS * sizeof(Photon);
@@ -784,6 +794,8 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
     UAVDesc.Buffer.CounterOffsetInBytes = 0;
     UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+    // UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    // UAVDesc.Texture2DArray.ArraySize = MAX_RAY_RECURSION_DEPTH;
     device->CreateUnorderedAccessView(m_photonMap.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
 
     m_photonMapResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_photonMapResourceUAVDescriptorHeapIndex, m_descriptorSize);
@@ -809,7 +821,7 @@ void D3D12RaytracingProceduralGeometry::CreateDescriptorHeap()
     // Allocate a heap for 6 descriptors:
     // 2 - vertex and index  buffer SRVs
     // 1 - raytracing output texture SRV
-    descriptorHeapDesc.NumDescriptors = 3;
+    descriptorHeapDesc.NumDescriptors = 4; // +1 for photon mapping
     descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     descriptorHeapDesc.NodeMask = 0;
@@ -1582,8 +1594,8 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
         dispatchDesc->MissShaderTable.StrideInBytes = m_photontracing_res.missShaderTableStrideInBytes;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = m_photontracing_res.rayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_photontracing_res.rayGenShaderTable->GetDesc().Width;
-        dispatchDesc->Width = m_width;
-        dispatchDesc->Height = m_height;
+        dispatchDesc->Width = NUM_PHOTONS;
+        dispatchDesc->Height = NUM_PHOTONS;
         dispatchDesc->Depth = 1;
         raytracingCommandList->SetPipelineState1(stateObject);
 
@@ -1647,6 +1659,7 @@ void D3D12RaytracingProceduralGeometry::CopyRaytracingOutputToBackbuffer()
 // Create resources that are dependent on the size of the main window.
 void D3D12RaytracingProceduralGeometry::CreateWindowSizeDependentResources()
 {
+    CreatePhotonGBuffers();
     CreateRaytracingOutputResource();
     UpdateCameraMatrices();
 }
@@ -1734,7 +1747,7 @@ void D3D12RaytracingProceduralGeometry::OnRender()
     }
 
     DoPhotontracing();
-    //DoRaytracing();
+    DoRaytracing();
     CopyRaytracingOutputToBackbuffer();
 
     // End frame.

@@ -47,13 +47,13 @@ private:
     //Photon Mapping
     static const UINT NUM_GBUFFERS = 4;
     static const UINT NUM_RENDERTARGETS = 1;
-    static const UINT NUM_PHOTONS = 1;
+    static const UINT NUM_PHOTONS = 100;
     
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> m_dxrDevice;
     ComPtr<ID3D12GraphicsCommandList5> m_dxrCommandList;
-    //ComPtr<ID3D12StateObject> m_dxrStateObject;
 
+    // DXR resources for each pipeline
     struct DXRResource {
         // DirectX Raytracing (DXR) attributes
         ComPtr<ID3D12StateObject> dxrStateObject;
