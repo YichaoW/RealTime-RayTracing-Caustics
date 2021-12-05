@@ -46,14 +46,31 @@ private:
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> m_dxrDevice;
     ComPtr<ID3D12GraphicsCommandList5> m_dxrCommandList;
-    ComPtr<ID3D12StateObject> m_dxrStateObject;
+    //ComPtr<ID3D12StateObject> m_dxrStateObject;
 
+    struct DXRResource {
+        // DirectX Raytracing (DXR) attributes
+        ComPtr<ID3D12StateObject> dxrStateObject;
+
+        // Root signatures
+        ComPtr<ID3D12RootSignature> globalRootSignature;
+        ComPtr<ID3D12RootSignature> localRootSignature[LocalRootSignature::Type::Count];
+
+        // Shader tables
+        ComPtr<ID3D12Resource> missShaderTable;
+        UINT missShaderTableStrideInBytes;
+        ComPtr<ID3D12Resource> hitGroupShaderTable;
+        UINT hitGroupShaderTableStrideInBytes;
+        ComPtr<ID3D12Resource> rayGenShaderTable;
+    };
+
+    DXRResource m_raytracing_res;
+    DXRResource m_photontracing_res;
+
+    
     // Root signatures
-    ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
-    ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature[LocalRootSignature::Type::Count];
-    // for photon tracing
-    ComPtr<ID3D12RootSignature> m_photontracingGlobalRootSignature;
-    ComPtr<ID3D12RootSignature> m_photontracingLocalRootSignature[LocalRootSignature::Type::Count];
+    // ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
+    // ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature[LocalRootSignature::Type::Count];
 
     // Descriptors
     ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
@@ -91,11 +108,11 @@ private:
     static const wchar_t* c_closestHitShaderNames[GeometryType::Count];
     static const wchar_t* c_missShaderNames[RayType::Count];
 
-    ComPtr<ID3D12Resource> m_missShaderTable;
-    UINT m_missShaderTableStrideInBytes;
-    ComPtr<ID3D12Resource> m_hitGroupShaderTable;
-    UINT m_hitGroupShaderTableStrideInBytes;
-    ComPtr<ID3D12Resource> m_rayGenShaderTable;
+    // ComPtr<ID3D12Resource> m_missShaderTable;
+    // UINT m_missShaderTableStrideInBytes;
+    // ComPtr<ID3D12Resource> m_hitGroupShaderTable;
+    // UINT m_hitGroupShaderTableStrideInBytes;
+    // ComPtr<ID3D12Resource> m_rayGenShaderTable;
 
     // Application state
     DX::GPUTimer m_gpuTimers[GpuTimers::Count];
@@ -122,7 +139,7 @@ private:
     void ReleaseWindowSizeDependentResources();
     void CreateRaytracingInterfaces();
     void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
-    void CreateRootSignatures(ComPtr<ID3D12RootSignature> globalRootSignature, ComPtr<ID3D12RootSignature> localRootSignature);
+    void CreateRootSignatures(DXRResource res);
     void CreateDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreateHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreatePhotonHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline); // photon tracing
