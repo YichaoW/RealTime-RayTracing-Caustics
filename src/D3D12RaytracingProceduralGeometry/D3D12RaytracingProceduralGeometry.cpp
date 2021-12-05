@@ -322,11 +322,11 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
 
     // Create root signatures for the shaders.
     CreateRootSignatures(m_raytracing_res);
-    CreateRootSignatures(m_photontracing_res);
+    //CreateRootSignatures(m_photontracing_res);
 
     // Create a raytracing pipeline state object which defines the binding of shaders, state and resources to be used during raytracing.
     CreateRaytracingPipelineStateObject();
-    CreatePhotontracingPipelineStateObject();
+    //CreatePhotontracingPipelineStateObject();
 
     // Create a heap for descriptors.
     CreateDescriptorHeap();
@@ -667,7 +667,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotontracingPipelineStateObject()
 
     // Local root signature and shader association
     // This is a root signature that enables a shader to have unique arguments that come from shader tables.
-    CreateLocalRootSignatureSubobjects(&raytracingPipeline);
+    CreatePhotonLocalRootSignatureSubobjects(&raytracingPipeline);
 
     // Global root signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
