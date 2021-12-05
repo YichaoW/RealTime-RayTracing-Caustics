@@ -79,6 +79,7 @@ const wchar_t* D3D12RaytracingProceduralGeometry::c_hitGroupNames_AABBGeometry_p
 D3D12RaytracingProceduralGeometry::D3D12RaytracingProceduralGeometry(UINT width, UINT height, std::wstring name) :
     DXSample(width, height, name),
     m_raytracingOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
+    m_photonMapResourceUAVDescriptorHeapIndex(UINT_MAX),
     m_animateGeometryTime(0.0f),
     m_animateCamera(false),
     m_animateGeometry(true),
@@ -369,7 +370,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
         CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Perfomance TIP: Order from most frequent to least frequent.
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0);  // 1 output texture
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
 
         CD3DX12_ROOT_PARAMETER rootParameters[GlobalRootSignature::Slot::Count];
@@ -757,6 +758,36 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingOutputResource()
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     device->CreateUnorderedAccessView(m_raytracingOutput.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
     m_raytracingOutputResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_raytracingOutputResourceUAVDescriptorHeapIndex, m_descriptorSize);
+}
+
+void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
+    auto device = m_deviceResources->GetD3DDevice();
+
+
+    D3D12_RESOURCE_ALLOCATION_INFO resDesc = {};
+    resDesc.SizeInBytes = NUM_PHOTONS * sizeof(Photon);
+    resDesc.Alignment = 0;
+    auto uavDesc = CD3DX12_RESOURCE_DESC::Buffer(resDesc, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+
+    ThrowIfFailed(device->CreateCommittedResource(
+        &defaultHeapProperties, D3D12_HEAP_FLAG_NONE, &uavDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_photonMap)));
+    NAME_D3D12_OBJECT(m_photonMap);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+    m_photonMapResourceUAVDescriptorHeapIndex = AllocateDescriptor(&uavDescriptorHandle, m_photonMapResourceUAVDescriptorHeapIndex);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+    UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    UAVDesc.Buffer.FirstElement = 0;
+    UAVDesc.Buffer.NumElements = NUM_PHOTONS;
+    UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
+    UAVDesc.Buffer.CounterOffsetInBytes = 0;
+    UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+    device->CreateUnorderedAccessView(m_photonMap.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
+
+    m_photonMapResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_photonMapResourceUAVDescriptorHeapIndex, m_descriptorSize);
+
 }
 
 void D3D12RaytracingProceduralGeometry::CreateAuxilaryDeviceResources()

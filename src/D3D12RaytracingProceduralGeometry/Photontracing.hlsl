@@ -28,6 +28,9 @@ StructuredBuffer<PrimitiveInstancePerFrameBuffer> g_AABBPrimitiveAttributes : re
 ConstantBuffer<PrimitiveConstantBuffer> l_materialCB : register(b1);
 ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
 
+// Photon Resource
+RWStructuredBuffer<Photon> g_photons: register(u1);
+
 
 //***************************************************************************
 //****************------ Utility functions -------***************************

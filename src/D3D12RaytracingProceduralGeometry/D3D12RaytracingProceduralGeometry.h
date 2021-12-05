@@ -42,6 +42,12 @@ private:
     const UINT NUM_BLAS = 2;          // Triangle + AABB bottom-level AS.
     const float c_aabbWidth = 2;      // AABB width.
     const float c_aabbDistance = 2;   // Distance between AABBs.
+
+
+    //Photon Mapping
+    static const UINT NUM_GBUFFERS = 4;
+    static const UINT NUM_RENDERTARGETS = 1;
+    static const UINT NUM_PHOTONS = 1;
     
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> m_dxrDevice;
@@ -100,6 +106,11 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor;
     UINT m_raytracingOutputResourceUAVDescriptorHeapIndex;
 
+    // Photon Map
+    ComPtr<ID3D12Resource> m_photonMap;
+    D3D12_GPU_DESCRIPTOR_HANDLE m_photonMapResourceUAVGpuDescriptor;
+    UINT m_photonMapResourceUAVDescriptorHeapIndex;
+
     // Shader tables
     static const wchar_t* c_hitGroupNames_TriangleGeometry[RayType::Count];
     static const wchar_t* c_hitGroupNames_AABBGeometry[IntersectionShaderType::Count][RayType::Count];
@@ -136,7 +147,10 @@ private:
     void InitializeScene();
     void RecreateD3D();
     void DoRaytracing();
+    //Photon 
     void DoPhotontracing();
+    void CreatePhotonGBuffers();
+
     void CreateConstantBuffers();
     void CreateAABBPrimitiveAttributesBuffers();
     void CreateDeviceDependentResources();

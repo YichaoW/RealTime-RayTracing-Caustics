@@ -51,6 +51,21 @@ typedef UINT16 Index;
 // as drivers may apply optimization strategies for low recursion depths.
 #define MAX_RAY_RECURSION_DEPTH 7    // ~ primary rays + reflections + shadow rays from reflected geometry.
 
+struct Photon {
+    XMFLOAT3 throughput;
+    XMFLOAT3 position;
+    XMFLOAT3 wi;
+};
+
+struct PhotonRayPayload {
+
+    XMFLOAT4 color;
+    UINT   recursionDepth;
+    bool prev_specular;
+    XMFLOAT3 throughput;
+};
+
+
 
 struct ProceduralPrimitiveAttributes
 {
