@@ -312,6 +312,9 @@ void D3D12RaytracingProceduralGeometry::CreateAABBPrimitiveAttributesBuffers()
 // Create resources that depend on the device.
 void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
 {
+    m_raytracing_res = {};
+    m_photontracing_res = {};
+
     CreateAuxilaryDeviceResources();
 
     // Initialize raytracing pipeline.
@@ -320,8 +323,8 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
     CreateRaytracingInterfaces();
 
     // Create root signatures for the shaders.
-    CreateRootSignatures(m_raytracingGlobalRootSignature, m_raytracingLocalRootSignature);
-    CreateRootSignatures(m_photontracingGlobalRootSignature, m_photontracingLocalRootSignature);
+    CreateRootSignatures(m_raytracing_res);
+    CreateRootSignatures(m_photontracing_res);
 
     // Create a raytracing pipeline state object which defines the binding of shaders, state and resources to be used during raytracing.
     CreateRaytracingPipelineStateObject();
@@ -360,7 +363,7 @@ void D3D12RaytracingProceduralGeometry::SerializeAndCreateRaytracingRootSignatur
     ThrowIfFailed(device->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&(*rootSig))));
 }
 
-void D3D12RaytracingProceduralGeometry::CreateRootSignatures(ComPtr<ID3D12RootSignature> globalRootSignature, ComPtr<ID3D12RootSignature> localRootSignature)
+void D3D12RaytracingProceduralGeometry::CreateRootSignatures(DXRResource res)
 {
     auto device = m_deviceResources->GetD3DDevice();
 
@@ -378,7 +381,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(ComPtr<ID3D12RootSi
         rootParameters[GlobalRootSignature::Slot::AABBattributeBuffer].InitAsShaderResourceView(3);
         rootParameters[GlobalRootSignature::Slot::VertexBuffers].InitAsDescriptorTable(1, &ranges[1]);
         CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-        SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &globalRootSignature);
+        SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &res.globalRootSignature);
     }
 
     // Local Root Signature
@@ -392,7 +395,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(ComPtr<ID3D12RootSi
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &localRootSignature[LocalRootSignature::Type::Triangle]);
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &res.localRootSignature[LocalRootSignature::Type::Triangle]);
         }
 
         // AABB geometry
@@ -404,7 +407,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures(ComPtr<ID3D12RootSi
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &localRootSignature[LocalRootSignature::Type::AABB]);
+            SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &res.localRootSignature[LocalRootSignature::Type::AABB]);
         }
     }
 }
@@ -619,7 +622,7 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingPipelineStateObject()
     PrintStateObjectDesc(raytracingPipeline);
 
     // Create the state object.
-    ThrowIfFailed(m_dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
+    ThrowIfFailed(m_dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_raytracing_res.dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
 }
 
 // Create a raytracing pipeline state object (RTPSO).
@@ -676,7 +679,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotontracingPipelineStateObject()
     PrintStateObjectDesc(raytracingPipeline);
 
     // Create the state object.
-    ThrowIfFailed(m_dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
+    ThrowIfFailed(m_dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_photontracing_res.dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
 }
 
 // Create a 2D output texture for raytracing.
@@ -1134,7 +1137,7 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
     UINT shaderIDSize;
     {
         ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
-        ThrowIfFailed(m_dxrStateObject.As(&stateObjectProperties));
+        ThrowIfFailed(m_raytracing_res.dxrStateObject.As(&stateObjectProperties));
         GetShaderIDs(stateObjectProperties.Get());
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
@@ -1165,7 +1168,7 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
         ShaderTable rayGenShaderTable(device, numShaderRecords, shaderRecordSize, L"RayGenShaderTable" );
         rayGenShaderTable.push_back(ShaderRecord(rayGenShaderID, shaderRecordSize, nullptr, 0));
         rayGenShaderTable.DebugPrint(shaderIdToStringMap);
-        m_rayGenShaderTable = rayGenShaderTable.GetResource();
+        m_raytracing_res.rayGenShaderTable = rayGenShaderTable.GetResource();
     }
     
     // Miss shader table.
@@ -1179,8 +1182,8 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
             missShaderTable.push_back(ShaderRecord(missShaderIDs[i], shaderIDSize, nullptr, 0));
         }
         missShaderTable.DebugPrint(shaderIdToStringMap);
-        m_missShaderTableStrideInBytes = missShaderTable.GetShaderRecordSize();
-        m_missShaderTable = missShaderTable.GetResource();
+        m_raytracing_res.missShaderTableStrideInBytes = missShaderTable.GetShaderRecordSize();
+        m_raytracing_res.missShaderTable = missShaderTable.GetResource();
     }
 
     // Hit group shader table.
@@ -1227,8 +1230,8 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
             }
         }
         hitGroupShaderTable.DebugPrint(shaderIdToStringMap);
-        m_hitGroupShaderTableStrideInBytes = hitGroupShaderTable.GetShaderRecordSize();
-        m_hitGroupShaderTable = hitGroupShaderTable.GetResource();
+        m_raytracing_res.hitGroupShaderTableStrideInBytes = hitGroupShaderTable.GetShaderRecordSize();
+        m_raytracing_res.hitGroupShaderTable = hitGroupShaderTable.GetResource();
     }
 }
 
@@ -1273,7 +1276,7 @@ void D3D12RaytracingProceduralGeometry::BuildPhotonShaderTables()
     UINT shaderIDSize;
     {
         ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
-        ThrowIfFailed(m_dxrStateObject.As(&stateObjectProperties));
+        ThrowIfFailed(m_photontracing_res.dxrStateObject.As(&stateObjectProperties));
         GetShaderIDs(stateObjectProperties.Get());
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
@@ -1304,7 +1307,7 @@ void D3D12RaytracingProceduralGeometry::BuildPhotonShaderTables()
         ShaderTable rayGenShaderTable(device, numShaderRecords, shaderRecordSize, L"RayGenShaderTable" );
         rayGenShaderTable.push_back(ShaderRecord(rayGenShaderID, shaderRecordSize, nullptr, 0));
         rayGenShaderTable.DebugPrint(shaderIdToStringMap);
-        m_rayGenShaderTable = rayGenShaderTable.GetResource();
+        m_photontracing_res.rayGenShaderTable = rayGenShaderTable.GetResource();
     }
     
     // Miss shader table.
@@ -1318,8 +1321,8 @@ void D3D12RaytracingProceduralGeometry::BuildPhotonShaderTables()
             missShaderTable.push_back(ShaderRecord(missShaderIDs[i], shaderIDSize, nullptr, 0));
         }
         missShaderTable.DebugPrint(shaderIdToStringMap);
-        m_missShaderTableStrideInBytes = missShaderTable.GetShaderRecordSize();
-        m_missShaderTable = missShaderTable.GetResource();
+        m_photontracing_res.missShaderTableStrideInBytes = missShaderTable.GetShaderRecordSize();
+        m_photontracing_res.missShaderTable = missShaderTable.GetResource();
     }
 
     // Hit group shader table.
@@ -1366,8 +1369,8 @@ void D3D12RaytracingProceduralGeometry::BuildPhotonShaderTables()
             }
         }
         hitGroupShaderTable.DebugPrint(shaderIdToStringMap);
-        m_hitGroupShaderTableStrideInBytes = hitGroupShaderTable.GetShaderRecordSize();
-        m_hitGroupShaderTable = hitGroupShaderTable.GetResource();
+        m_photontracing_res.hitGroupShaderTableStrideInBytes = hitGroupShaderTable.GetShaderRecordSize();
+        m_photontracing_res.hitGroupShaderTable = hitGroupShaderTable.GetResource();
     }
 }
 
@@ -1434,14 +1437,14 @@ void D3D12RaytracingProceduralGeometry::DoRaytracing()
 
     auto DispatchRays = [&](auto* raytracingCommandList, auto* stateObject, auto* dispatchDesc)
     {
-        dispatchDesc->HitGroupTable.StartAddress = m_hitGroupShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->HitGroupTable.SizeInBytes = m_hitGroupShaderTable->GetDesc().Width;
-        dispatchDesc->HitGroupTable.StrideInBytes = m_hitGroupShaderTableStrideInBytes;
-        dispatchDesc->MissShaderTable.StartAddress = m_missShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->MissShaderTable.SizeInBytes = m_missShaderTable->GetDesc().Width;
-        dispatchDesc->MissShaderTable.StrideInBytes = m_missShaderTableStrideInBytes;
-        dispatchDesc->RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StartAddress = m_raytracing_res.hitGroupShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->HitGroupTable.SizeInBytes = m_raytracing_res.hitGroupShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StrideInBytes = m_raytracing_res.hitGroupShaderTableStrideInBytes;
+        dispatchDesc->MissShaderTable.StartAddress = m_raytracing_res.missShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->MissShaderTable.SizeInBytes = m_raytracing_res.missShaderTable->GetDesc().Width;
+        dispatchDesc->MissShaderTable.StrideInBytes = m_raytracing_res.missShaderTableStrideInBytes;
+        dispatchDesc->RayGenerationShaderRecord.StartAddress = m_raytracing_res.rayGenShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_raytracing_res.rayGenShaderTable->GetDesc().Width;
         dispatchDesc->Width = m_width;
         dispatchDesc->Height = m_height;
         dispatchDesc->Depth = 1;
@@ -1460,7 +1463,7 @@ void D3D12RaytracingProceduralGeometry::DoRaytracing()
         commandList->SetComputeRootDescriptorTable(GlobalRootSignature::Slot::OutputView, m_raytracingOutputResourceUAVGpuDescriptor);
     };
 
-    commandList->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
+    commandList->SetComputeRootSignature(m_raytracing_res.globalRootSignature.Get());
 
     // Copy dynamic buffers to GPU.
     {
@@ -1475,7 +1478,7 @@ void D3D12RaytracingProceduralGeometry::DoRaytracing()
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     SetCommonPipelineState(commandList);
     commandList->SetComputeRootShaderResourceView(GlobalRootSignature::Slot::AccelerationStructure, m_topLevelAS->GetGPUVirtualAddress());
-    DispatchRays(m_dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
+    DispatchRays(m_dxrCommandList.Get(), m_raytracing_res.dxrStateObject.Get(), &dispatchDesc);
 }
 
 void D3D12RaytracingProceduralGeometry::DoPhotontracing()
@@ -1485,14 +1488,14 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
 
     auto DispatchRays = [&](auto* raytracingCommandList, auto* stateObject, auto* dispatchDesc)
     {
-        dispatchDesc->HitGroupTable.StartAddress = m_hitGroupShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->HitGroupTable.SizeInBytes = m_hitGroupShaderTable->GetDesc().Width;
-        dispatchDesc->HitGroupTable.StrideInBytes = m_hitGroupShaderTableStrideInBytes;
-        dispatchDesc->MissShaderTable.StartAddress = m_missShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->MissShaderTable.SizeInBytes = m_missShaderTable->GetDesc().Width;
-        dispatchDesc->MissShaderTable.StrideInBytes = m_missShaderTableStrideInBytes;
-        dispatchDesc->RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
-        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StartAddress = m_photontracing_res.hitGroupShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->HitGroupTable.SizeInBytes = m_photontracing_res.hitGroupShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StrideInBytes = m_photontracing_res.hitGroupShaderTableStrideInBytes;
+        dispatchDesc->MissShaderTable.StartAddress = m_photontracing_res.missShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->MissShaderTable.SizeInBytes = m_photontracing_res.missShaderTable->GetDesc().Width;
+        dispatchDesc->MissShaderTable.StrideInBytes = m_photontracing_res.missShaderTableStrideInBytes;
+        dispatchDesc->RayGenerationShaderRecord.StartAddress = m_photontracing_res.rayGenShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_photontracing_res.rayGenShaderTable->GetDesc().Width;
         dispatchDesc->Width = m_width;
         dispatchDesc->Height = m_height;
         dispatchDesc->Depth = 1;
@@ -1511,7 +1514,7 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
         commandList->SetComputeRootDescriptorTable(GlobalRootSignature::Slot::OutputView, m_raytracingOutputResourceUAVGpuDescriptor);
     };
 
-    commandList->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
+    commandList->SetComputeRootSignature(m_photontracing_res.globalRootSignature.Get());
 
     // Copy dynamic buffers to GPU.
     {
@@ -1526,7 +1529,7 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     SetCommonPipelineState(commandList);
     commandList->SetComputeRootShaderResourceView(GlobalRootSignature::Slot::AccelerationStructure, m_topLevelAS->GetGPUVirtualAddress());
-    DispatchRays(m_dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
+    DispatchRays(m_dxrCommandList.Get(), m_photontracing_res.dxrStateObject.Get(), &dispatchDesc);
 }
 
 // Update the application state with the new resolution.
