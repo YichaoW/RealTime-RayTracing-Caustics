@@ -322,11 +322,11 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
 
     // Create root signatures for the shaders.
     CreateRootSignatures();
-    //CreatePhotonRootSignatures();
+    CreatePhotonRootSignatures();
 
     // Create a raytracing pipeline state object which defines the binding of shaders, state and resources to be used during raytracing.
     CreateRaytracingPipelineStateObject();
-    //CreatePhotontracingPipelineStateObject();
+    CreatePhotontracingPipelineStateObject();
 
     // Create a heap for descriptors.
     CreateDescriptorHeap();
@@ -1702,8 +1702,8 @@ void D3D12RaytracingProceduralGeometry::OnRender()
         gpuTimer.BeginFrame(commandList);
     }
 
-    //DoPhotontracing();
-    DoRaytracing();
+    DoPhotontracing();
+    //DoRaytracing();
     CopyRaytracingOutputToBackbuffer();
 
     // End frame.
