@@ -51,6 +51,9 @@ private:
     // Root signatures
     ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
     ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature[LocalRootSignature::Type::Count];
+    // for photon tracing
+    ComPtr<ID3D12RootSignature> m_photontracingGlobalRootSignature;
+    ComPtr<ID3D12RootSignature> m_photontracingLocalRootSignature[LocalRootSignature::Type::Count];
 
     // Descriptors
     ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
@@ -110,6 +113,7 @@ private:
     void InitializeScene();
     void RecreateD3D();
     void DoRaytracing();
+    void DoPhotontracing();
     void CreateConstantBuffers();
     void CreateAABBPrimitiveAttributesBuffers();
     void CreateDeviceDependentResources();
@@ -118,11 +122,14 @@ private:
     void ReleaseWindowSizeDependentResources();
     void CreateRaytracingInterfaces();
     void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
-    void CreateRootSignatures();
+    void CreateRootSignatures(ComPtr<ID3D12RootSignature> globalRootSignature, ComPtr<ID3D12RootSignature> localRootSignature);
     void CreateDxilLibrarySubobject(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreateHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
+    void CreatePhotonHitGroupSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline); // photon tracing
     void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
+    void CreatePhotonLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
     void CreateRaytracingPipelineStateObject();
+    void CreatePhotontracingPipelineStateObject();
     void CreateAuxilaryDeviceResources();
     void CreateDescriptorHeap();
     void CreateRaytracingOutputResource();
@@ -135,7 +142,8 @@ private:
     AccelerationStructureBuffers BuildBottomLevelAS(const std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& geometryDesc, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE);
     AccelerationStructureBuffers BuildTopLevelAS(AccelerationStructureBuffers bottomLevelAS[BottomLevelASType::Count], D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE);
     void BuildAccelerationStructures();
-    void BuildShaderTables();
+    void BuildShaderTables(); // raytracing
+    void BuildPhotonShaderTables(); // photontracing
     void UpdateForSizeChange(UINT clientWidth, UINT clientHeight);
     void CopyRaytracingOutputToBackbuffer();
     void CalculateFrameStats();
