@@ -168,7 +168,8 @@ void D3D12RaytracingProceduralGeometry::UpdateAABBPrimitiveAttributes(float anim
     {
         using namespace AnalyticPrimitive;
         SetTransformForAABB(offset + AABB, mScale15y, mIdentity);
-        SetTransformForAABB(offset + Spheres, mScale15, mRotation);
+        SetTransformForAABB(offset + Floor, XMMatrixScaling(100, 0.1, 100), mIdentity);
+        SetTransformForAABB(offset + Spheres, mScale15, mIdentity);
         offset += AnalyticPrimitive::Count;
     }
 
@@ -221,19 +222,27 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         };
 
 
-        m_planeMaterialCB = { XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f), 0.0f, 1, 0.4f, 50, 1, 0.0f};
-
+        m_planeMaterialCB = { XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f),
+         0.0f, 
+         1, 
+         0.0f,
+         0, 
+         1, 
+         0.0f};
+//
         // Albedos
         XMFLOAT4 green = XMFLOAT4(0.1f, 1.0f, 0.5f, 1.0f);
         XMFLOAT4 red = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
         XMFLOAT4 yellow = XMFLOAT4(1.0f, 1.0f, 0.5f, 1.0f);
-        
+        XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
         UINT offset = 0;
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
             SetAttributes(offset + AABB, ChromiumReflectance,1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
             SetAttributes(offset + Spheres, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
+            SetAttributes(offset + Floor, white);
             offset += AnalyticPrimitive::Count;
         }
 
@@ -853,8 +862,9 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
-          //  m_aabbs[offset + Spheres] = InitializeAABB(XMFLOAT3(2.25f, 0, 0.75f), XMFLOAT3(3, 3, 3));
+            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+           // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
+            m_aabbs[offset + Spheres] = InitializeAABB(XMFLOAT3(1, 0, 1), XMFLOAT3(2, 3, 2));
             offset += AnalyticPrimitive::Count;
         }
 

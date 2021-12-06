@@ -163,7 +163,7 @@ bool TraceShadowRayAndReportIfHit(in Ray ray, in UINT currentRayRecursionDepth)
 }
 
 
-void TracePhotonRay(in Ray ray, in UINT currentRayRecursionDepth, float3 throughput, bool prev_specular)
+void TracePhotonRay(in Ray ray, in PhotonRayPayload rayPayload, in UINT currentRayRecursionDepth, float3 throughput, bool prev_specular)
 {
     if (currentRayRecursionDepth >= MAX_RAY_RECURSION_DEPTH)
     {
@@ -178,14 +178,20 @@ void TracePhotonRay(in Ray ray, in UINT currentRayRecursionDepth, float3 through
     // Note: make sure to enable face culling so as to avoid surface face fighting.
     rayDesc.TMin = 0;
     rayDesc.TMax = 10000;
-    PhotonRayPayload rayPayload =
-    {
-        ray.origin,         // hit position
-        ray.direction,      // ray direction 
-        prev_specular,      // previous hit is specular
-        throughput,    // throughput
-        currentRayRecursionDepth + 1,                  // recursion depth
-    };
+    // PhotonRayPayload rayPayload =
+    // {
+    //     ray.origin,         // hit position
+    //     ray.direction,      // ray direction 
+    //     prev_specular,      // previous hit is specular
+    //     throughput,    // throughput
+    //     currentRayRecursionDepth + 1,                  // recursion depth
+    // };
+    rayPayload.position = ray.origin;
+    rayPayload.direction = ray.direction;
+    rayPayload.throughput = throughput;
+    rayPayload.prev_specular = prev_specular;
+    rayPayload.recursionDepth = currentRayRecursionDepth + 1;
+
     TraceRay(g_scene,
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
         TraceRayParameters::InstanceMask,
@@ -209,13 +215,13 @@ uint wang_hash(uint seed)
     return seed;
 }
 
-uint rand_xorshift()
+float rand_xorshift()
 {
     // Xorshift algorithm from George Marsaglia's paper
     rng_state ^= (rng_state << 13);
     rng_state ^= (rng_state >> 17);
     rng_state ^= (rng_state << 5);
-    return rng_state * (1.0 / 4294967296.0);
+    return rng_state * (1.0f / 4294967296.0f);
 }
 
 float3 calculateRandomDirectionInHemisphere(in float3 normal) {
@@ -265,6 +271,19 @@ float3 SquareToSphereUniform(float2 samplePoint)
     return result;
 }
 
+float3 SamplePointLight(float2 lightUV)
+{
+   float2 signUV = float2(lightUV.x > 0 ? 1 : -1, lightUV.y > 0 ? 1 : -1);
+   float2 absUV = abs(lightUV.xy);
+   float3 direction = float3(lightUV.xy, absUV.x + absUV.y - 1);
+   if (direction.z > 0)
+   {
+       direction.xy = (1 - absUV.yx) * signUV;
+   }
+   return normalize(direction);
+}
+
+
 //***************************************************************************
 //********************------ Ray gen shader.. -------************************
 //***************************************************************************
@@ -284,8 +303,9 @@ void MyRaygenShader_Photon()
 
     //TODO improve to hemisphere sample
     float2 sampleUV = float2(rand_xorshift(), rand_xorshift());
-    float3 rayDir = SquareToSphereUniform(sampleUV);
-
+    float3 rayDir = normalize(SquareToSphereUniform(sampleUV));
+    //float3 rayDir = SamplePointLight(sampleUV);
+    sampleUV *= 100;
 
     RayDesc rayDesc;
     rayDesc.Origin = g_sceneCB.lightPosition.xyz;
@@ -311,6 +331,12 @@ void MyRaygenShader_Photon()
         TraceRayParameters::HitGroup::GeometryStride,
         TraceRayParameters::MissShader::Offset[RayType::Radiance],
         rayDesc, rayPayload);
+
+    uint3 launchIndex = DispatchRaysIndex();
+    uint3 launchDimension = DispatchRaysDimensions();
+    int index = launchIndex.y * launchDimension.x + launchIndex.x;
+    Photon p = g_photons[index];
+    g_renderTarget[DispatchRaysIndex().xy] = float4(p.position,1);
 
 }
 
@@ -346,7 +372,6 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     //Ray newRay;
     float3 newThroughput = float3(1, 1, 1);
     float3 throughput = rayPayload.throughput;
-
     //float russian_roulette_prob = max(throughput.x, max(throughput.y, throughput.z));
     //float threshold = rand_xorshift();
     
@@ -377,22 +402,20 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
             Ray newRay = { HitWorldPosition() + 0.01 * newDir, newDir};
-            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
+            TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
             
         }
         else { // total reflect
             Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
-            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
+            TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
 
         }
-
     }
     else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
         Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
-        TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
-
+        TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
 
     }
     else { //diffuse lambert
@@ -401,6 +424,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
             Photon p = {throughput, hitPosition, -rayPayload.direction};
             StorePhoton(p);
         }
+        //rayPayload.position = hitPosition;
 
     }
 
@@ -453,21 +477,22 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
             Ray newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //���ʾ�������ô���ģ�����
-            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
+            TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
 
         }
         else { // total reflect
             Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
-            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
+            TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
 
         }
+        //rayPayload.position = hitPosition;
 
     }
     else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
         Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
-        TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
+        TracePhotonRay(newRay, rayPayload, rayPayload.recursionDepth, newThroughput, true);
 
 
     }
@@ -476,6 +501,7 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
             //store photon
             Photon p = {throughput, hitPosition, -rayPayload.direction};
             StorePhoton(p);
+
         }
 
     }

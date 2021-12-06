@@ -1,4 +1,5 @@
 ﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
   D3D12RaytracingProceduralGeometry.cpp
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(171,74): warning C4305: 'argument': truncation from 'double' to 'float'
   D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe
