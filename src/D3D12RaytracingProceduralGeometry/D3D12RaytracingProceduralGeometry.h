@@ -128,11 +128,10 @@ private:
     static const wchar_t* c_intersectionShaderNames_photon[IntersectionShaderType::Count];
     static const wchar_t* c_closestHitShaderNames_photon[GeometryType::Count];
     static const wchar_t* c_missShaderNames_photon[RayType::Count];
-    // ComPtr<ID3D12Resource> m_missShaderTable;
-    // UINT m_missShaderTableStrideInBytes;
-    // ComPtr<ID3D12Resource> m_hitGroupShaderTable;
-    // UINT m_hitGroupShaderTableStrideInBytes;
-    // ComPtr<ID3D12Resource> m_rayGenShaderTable;
+    
+    // load model
+    std::vector<Vertex> m_vertices;
+    std::vector<Index> m_indices;
 
     // Application state
     DX::GPUTimer m_gpuTimers[GpuTimers::Count];
@@ -154,6 +153,7 @@ private:
     void DoPhotontracing();
     void CreatePhotonGBuffers();
 
+    void LoadModel();
     void CreateConstantBuffers();
     void CreateAABBPrimitiveAttributesBuffers();
     void CreateDeviceDependentResources();

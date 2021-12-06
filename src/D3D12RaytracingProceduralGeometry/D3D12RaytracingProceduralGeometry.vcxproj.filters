@@ -81,6 +81,9 @@
     <ClInclude Include="util\PerformanceTimers.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

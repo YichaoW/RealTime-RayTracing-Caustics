@@ -51,6 +51,8 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
     float3 color = float3(0,0,0);
     float numPhoton = 0;
     float maxDist = 0;
+    float minDist = 0;
+
     // naive search 
     for (int i = 0; i < numStructs; i++) {
         if (!any(g_photons[i].throughput)) {
