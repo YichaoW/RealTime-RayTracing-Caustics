@@ -1,10 +1,12 @@
-﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
-  
+﻿Raytracing.hlsl(255,57): warning GBFFABD58: implicit truncation of vector type
+      float4 causticsColor = computeCaustics(hitPosition, phongColor);
+                                                          ^
+Raytracing.hlsl(340,60): warning GBFFABD58: implicit truncation of vector type
+          float4 causticColor = computeCaustics(hitPosition, phongColor);
+                                                             ^
 FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
   D3D12RaytracingProceduralGeometry.cpp
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(171,74): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(867,73): warning C4305: 'argument': truncation from 'double' to 'float'
-  Main.cpp
-  Generating Code...
   D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe

@@ -45,12 +45,12 @@ RWStructuredBuffer<Photon> g_photons : register(u1);
 //****************------ Utility functions -------***************************
 //***************************************************************************
 
-float4 computeCaustics(in float3 hitPosition, inout bool hasPhoton) {
+float4 computeCaustics(in float3 hitPosition, in float3 f) {
     uint numStructs, stride;
     g_photons.GetDimensions(numStructs, stride);
     float3 color = float3(0,0,0);
     float numPhoton = 0;
-
+    float maxDist = 0;
     // naive search 
     for (int i = 0; i < numStructs; i++) {
         if (!any(g_photons[i].throughput)) {
@@ -58,13 +58,13 @@ float4 computeCaustics(in float3 hitPosition, inout bool hasPhoton) {
         }
         float dist = distance(g_photons[i].position, hitPosition);
         if (dist < PHOTON_SEARCH_RADIUS) {
-            color += g_photons[i].throughput;
+            color += f * g_photons[i].throughput;
+            maxDist = max(dist, maxDist);
             numPhoton++;
         }
     }
     if (numPhoton != 0) {
-        hasPhoton = true;
-        return float4(color / numPhoton, 1);
+        return float4(color / numPhoton  / PI / maxDist, 1);
     }
     return float4(0, 0, 0, 1);
 }
@@ -250,18 +250,15 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
 
     // Calculate final color.
     bool hasPhoton = false;
-    float4 temp = computeCaustics(hitPosition, hasPhoton);
 
     float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-    float4 color = checkers * (phongColor + reflectedColor) + temp;;
+    float4 causticsColor = computeCaustics(hitPosition, phongColor);
+    float4 color = checkers * (phongColor + reflectedColor) + causticsColor;;
 
     // Apply visibility falloff.
     float t = RayTCurrent();
     color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
 
-    if (hasPhoton) {
-        rayPayload.color = float4(1, 0,0, 1);
-    }
     rayPayload.color = color;
 }
 
@@ -340,7 +337,8 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     else {
         // Calculate final color.
         float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-        color += phongColor + reflectedColor;// + computeCaustics(hitPosition);
+        float4 causticColor = computeCaustics(hitPosition, phongColor);
+        color += phongColor + reflectedColor + causticColor;
     }
 
     // Apply visibility falloff.

@@ -372,6 +372,10 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     //Ray newRay;
     float3 newThroughput = float3(1, 1, 1);
     float3 throughput = rayPayload.throughput;
+
+    Ray shadowRay = { hitPosition, normalize(g_sceneCB.lightPosition.xyz - hitPosition) };
+    bool shadowRayHit = TraceShadowRayAndReportIfHit(shadowRay, rayPayload.recursionDepth);
+
     //float russian_roulette_prob = max(throughput.x, max(throughput.y, throughput.z));
     //float threshold = rand_xorshift();
     
@@ -421,7 +425,8 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     else { //diffuse lambert
         if (rayPayload.prev_specular) {
             //store photon
-            Photon p = {throughput, hitPosition, -rayPayload.direction};
+            float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
+            Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction};
             StorePhoton(p);
         }
         //rayPayload.position = hitPosition;
@@ -446,6 +451,8 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
    // Ray newRay;
     float3 newThroughput = float3(1, 1, 1);
     float3 throughput = rayPayload.throughput;
+    Ray shadowRay = { hitPosition, normalize(g_sceneCB.lightPosition.xyz - hitPosition) };
+    bool shadowRayHit = TraceShadowRayAndReportIfHit(shadowRay, rayPayload.recursionDepth);
 
     //float russian_roulette_prob = max(throughput.x, max(throughput.y, throughput.z));
     //float threshold = rand_xorshift();
@@ -499,9 +506,9 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
     else { //diffuse lambert
         if (rayPayload.prev_specular) {
             //store photon
-            Photon p = {throughput, hitPosition, -rayPayload.direction};
+            float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
+            Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction};
             StorePhoton(p);
-
         }
 
     }
