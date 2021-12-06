@@ -38,6 +38,9 @@ ConstantBuffer<PrimitiveConstantBuffer> l_materialCB : register(b1);
 ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
 
 
+RWStructuredBuffer<Photon> g_photons : register(u1);
+
+
 //***************************************************************************
 //****************------ Utility functions -------***************************
 //***************************************************************************
@@ -170,7 +173,7 @@ void MyRaygenShader()
     // Cast a ray into the scene and retrieve a shaded color.
     UINT currentRecursionDepth = 0;
     float4 color = TraceRadianceRay(ray, currentRecursionDepth);
-
+    color = float4(g_photons[0].throughput, 1);
     // Write the raytraced color to the output texture.
     g_renderTarget[DispatchRaysIndex().xy] = color;
 }

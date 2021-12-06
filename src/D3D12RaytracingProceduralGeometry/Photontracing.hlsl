@@ -17,7 +17,6 @@
 //  l_* - bound via a local root signature.
 RaytracingAccelerationStructure g_scene : register(t0, space0);
 RWTexture2D<float4> g_renderTarget : register(u0);
-RWStructuredBuffer<Photon> g_buffer : register(u1);
 ConstantBuffer<SceneConstantBuffer> g_sceneCB : register(b0);
 
 // Triangle resources
@@ -37,10 +36,10 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 //****************------ Utility functions -------***************************
 //***************************************************************************
 void StorePhoton() {
-    // int index = DispatchRaysIndex().x;
-    // Photon p;
-    // p.throughput = float3(1, 0, 0);
-    // g_buffer[index] = p;
+    int index = DispatchRaysIndex().x;
+    Photon p;
+    p.throughput = float3(1, 0, 0);
+    g_photons[0] = p;
 }
 
 // Diffuse lighting calculation.
@@ -172,6 +171,8 @@ void MyRaygenShader_Photon()
     // Cast a ray into the scene and retrieve a shaded color.
     UINT currentRecursionDepth = 0;
     float4 color = TraceRadianceRay(ray, currentRecursionDepth);
+
+    color = float4(g_photons[0].throughput, 1);
 
     // Write the raytraced color to the output texture.
     g_renderTarget[DispatchRaysIndex().xy] = color;

@@ -47,7 +47,7 @@ private:
     //Photon Mapping
     static const UINT NUM_GBUFFERS = 4;
     static const UINT NUM_RENDERTARGETS = 1;
-    static const UINT NUM_PHOTONS = 100;
+    static const UINT NUM_PHOTONS = 1;
     
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> m_dxrDevice;
@@ -110,6 +110,7 @@ private:
     ComPtr<ID3D12Resource> m_photonMap;
     D3D12_GPU_DESCRIPTOR_HANDLE m_photonMapResourceUAVGpuDescriptor;
     UINT m_photonMapResourceUAVDescriptorHeapIndex;
+    bool hasPhotonMap = false;
 
     // Shader tables
     static const wchar_t* c_hitGroupNames_TriangleGeometry[RayType::Count];
@@ -184,6 +185,7 @@ private:
     void BuildShaderTables(); // raytracing
     void BuildPhotonShaderTables(); // photontracing
     void UpdateForSizeChange(UINT clientWidth, UINT clientHeight);
+    void CopyPhotonMapToBackbuffer();
     void CopyRaytracingOutputToBackbuffer();
     void CalculateFrameStats();
     UINT AllocateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse = UINT_MAX);

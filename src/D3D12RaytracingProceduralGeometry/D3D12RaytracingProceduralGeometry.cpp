@@ -348,9 +348,9 @@ void D3D12RaytracingProceduralGeometry::CreateDeviceDependentResources()
     BuildPhotonShaderTables();
     BuildShaderTables();
 
-    CreatePhotonGBuffers();
     // Create an output 2D texture to store the raytracing result to.
     CreateRaytracingOutputResource();
+    CreatePhotonGBuffers();
 }
 
 void D3D12RaytracingProceduralGeometry::SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig)
@@ -764,18 +764,8 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingOutputResource()
 void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     auto device = m_deviceResources->GetD3DDevice();
 
-    // int width = sqrt(NUM_PHOTONS);
-    // int height = width;
-    // if (NUM_PHOTONS % width != 0) {
-    //     height++;
-    // }
-    // UINT gwidth = min(D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION, sqrt(width));
-    // UINT gheight = min(D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION, height);
-    // auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, NUM_PHOTONS, NUM_PHOTONS, MAX_RAY_RECURSION_DEPTH, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-
     D3D12_RESOURCE_ALLOCATION_INFO resDesc = {};
-    resDesc.SizeInBytes = NUM_PHOTONS * sizeof(Photon);
+    resDesc.SizeInBytes = NUM_PHOTONS * NUM_PHOTONS * sizeof(Photon);
     resDesc.Alignment = 0;
     auto uavDesc = CD3DX12_RESOURCE_DESC::Buffer(resDesc, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -790,12 +780,10 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
     UAVDesc.Buffer.FirstElement = 0;
-    UAVDesc.Buffer.NumElements = NUM_PHOTONS;
+    UAVDesc.Buffer.NumElements = NUM_PHOTONS * NUM_PHOTONS;
     UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
     UAVDesc.Buffer.CounterOffsetInBytes = 0;
     UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-    // UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    // UAVDesc.Texture2DArray.ArraySize = MAX_RAY_RECURSION_DEPTH;
     device->CreateUnorderedAccessView(m_photonMap.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
 
     m_photonMapResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_photonMapResourceUAVDescriptorHeapIndex, m_descriptorSize);
@@ -821,7 +809,8 @@ void D3D12RaytracingProceduralGeometry::CreateDescriptorHeap()
     // Allocate a heap for 6 descriptors:
     // 2 - vertex and index  buffer SRVs
     // 1 - raytracing output texture SRV
-    descriptorHeapDesc.NumDescriptors = 4; // +1 for photon mapping
+    // 1 - photon mapping UAV
+    descriptorHeapDesc.NumDescriptors = 4;
     descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     descriptorHeapDesc.NodeMask = 0;
@@ -1594,8 +1583,8 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
         dispatchDesc->MissShaderTable.StrideInBytes = m_photontracing_res.missShaderTableStrideInBytes;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = m_photontracing_res.rayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_photontracing_res.rayGenShaderTable->GetDesc().Width;
-        dispatchDesc->Width = NUM_PHOTONS;
-        dispatchDesc->Height = NUM_PHOTONS;
+        dispatchDesc->Width = m_width;
+        dispatchDesc->Height = m_height;
         dispatchDesc->Depth = 1;
         raytracingCommandList->SetPipelineState1(stateObject);
 
@@ -1656,11 +1645,31 @@ void D3D12RaytracingProceduralGeometry::CopyRaytracingOutputToBackbuffer()
     commandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
 }
 
+// Copy the photon map to the backbuffer.
+void D3D12RaytracingProceduralGeometry::CopyPhotonMapToBackbuffer()
+{
+    auto commandList = m_deviceResources->GetCommandList();
+    auto renderTarget = m_deviceResources->GetRenderTarget();
+
+    D3D12_RESOURCE_BARRIER preCopyBarriers[2];
+    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_photonMap.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
+
+    commandList->CopyResource(renderTarget, m_photonMap.Get());
+
+    D3D12_RESOURCE_BARRIER postCopyBarriers[2];
+    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_photonMap.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+    commandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
+}
+
 // Create resources that are dependent on the size of the main window.
 void D3D12RaytracingProceduralGeometry::CreateWindowSizeDependentResources()
 {
-    CreatePhotonGBuffers();
     CreateRaytracingOutputResource();
+    CreatePhotonGBuffers();
     UpdateCameraMatrices();
 }
 
@@ -1668,6 +1677,7 @@ void D3D12RaytracingProceduralGeometry::CreateWindowSizeDependentResources()
 void D3D12RaytracingProceduralGeometry::ReleaseWindowSizeDependentResources()
 {
     m_raytracingOutput.Reset();
+    m_photonMap.Reset();
 }
 
 // Release all resources that depend on the device.
@@ -1705,7 +1715,9 @@ void D3D12RaytracingProceduralGeometry::ReleaseDeviceDependentResources()
     m_topLevelAS.Reset();
 
     m_raytracingOutput.Reset();
+    m_photonMap.Reset();
     m_raytracingOutputResourceUAVDescriptorHeapIndex = UINT_MAX;
+    m_photonMapResourceUAVDescriptorHeapIndex = UINT_MAX;
     m_raytracing_res.rayGenShaderTable.Reset();
     m_raytracing_res.missShaderTable.Reset();
     m_raytracing_res.hitGroupShaderTable.Reset();
@@ -1746,7 +1758,12 @@ void D3D12RaytracingProceduralGeometry::OnRender()
         gpuTimer.BeginFrame(commandList);
     }
 
-    DoPhotontracing();
+    if (!hasPhotonMap) {
+        DoPhotontracing();
+        hasPhotonMap = true;
+    }
+    //CopyPhotonMapToBackbuffer();
+
     DoRaytracing();
     CopyRaytracingOutputToBackbuffer();
 
