@@ -1,1 +1,0 @@
-C:\cis565_final\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Release\WinPixEventRuntime.dll
