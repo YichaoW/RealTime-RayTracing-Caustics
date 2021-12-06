@@ -152,6 +152,39 @@ bool TraceShadowRayAndReportIfHit(in Ray ray, in UINT currentRayRecursionDepth)
 }
 
 
+void TracePhotonRay(in Ray ray, in UINT currentRayRecursionDepth, float3 throughput, bool prev_specular)
+{
+    if (currentRayRecursionDepth >= MAX_RAY_RECURSION_DEPTH)
+    {
+        return;
+    }
+
+    // Set the ray's extents.
+    RayDesc rayDesc;
+    rayDesc.Origin = ray.origin;
+    rayDesc.Direction = ray.direction;
+    // Set TMin to a zero value to avoid aliasing artifacts along contact areas.
+    // Note: make sure to enable face culling so as to avoid surface face fighting.
+    rayDesc.TMin = 0;
+    rayDesc.TMax = 10000;
+    PhotonRayPayload rayPayload =
+    {
+        ray.origin,         // hit position
+        ray.direction,      // ray direction 
+        prev_specular,      // previous hit is specular
+        throughput,    // throughput
+        currentRayRecursionDepth + 1,                  // recursion depth
+    };
+    TraceRay(g_scene,
+        RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
+        TraceRayParameters::InstanceMask,
+        TraceRayParameters::HitGroup::Offset[RayType::Radiance],
+        TraceRayParameters::HitGroup::GeometryStride,
+        TraceRayParameters::MissShader::Offset[RayType::Radiance],
+        rayDesc, rayPayload);
+}
+
+
 //https://www.reedbeta.com/blog/quick-and-easy-gpu-random-numbers-in-d3d11/ random number in d3d11
 
 static uint rng_state;
@@ -291,7 +324,7 @@ void MyRaygenShader_Photon()
         rayDir,             // ray direction 
         false,              // previous hit is specular
         float3(1, 1, 1),    // throughput
-        0,
+        0,                  // recursion depth
     };
 
     TraceRay(g_scene,
@@ -311,6 +344,11 @@ void MyRaygenShader_Photon()
 [shader("closesthit")]
 void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in BuiltInTriangleIntersectionAttributes attr)
 {
+    if (rayPayload.recursionDepth >= MAX_RAY_RECURSION_DEPTH) {
+        return;
+    }
+
+
     // Get the base index of the triangle's first 16 bit index.
     uint indexSizeInBytes = 2;
     uint indicesPerTriangle = 3;
@@ -329,8 +367,19 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     float3 hitPosition = HitWorldPosition();
 
     Ray newRay;
+    float3 newThroughput = float(1, 1, 1);
+    float3 throughput = rayPayload.throughput;
 
-    // Reflected component.
+    //float russian_roulette_prob = max(throughput.x, max(throughput.y, throughput.z));
+    //float threshold = rand_xorshift();
+    
+    //if (threshold >= russian_roulette_prob) {
+    //    return;
+    //}
+
+    //newThroughput = throughput * 
+
+  
     if (l_materialCB.refractCoef > 0.001) {
         float rayDotNormal = dot(WorldRayDirection(), triangleNormal);
         float temp = 1.5;
@@ -351,9 +400,12 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
             newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //材质具体是怎么样的？？？
+            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
+            
         }
         else { // total reflect
             newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
 
         }
 
@@ -362,23 +414,21 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     {
         // Trace a reflection ray.
         newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+        TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
+
 
     }
     else { //diffuse lambert
-        float newDir = calculateRandomDirectionInHemisphere(triangleNormal);
-        newRay = { HitWorldPosition() , newDir };
+        if (rayPayload.prev_specular) {
+            //store photon
+        }
+
     }
-
-    // Apply visibility falloff.
-    float t = RayTCurrent();
-    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
-
-    rayPayload.color = color;
 
 }
 
 [shader("closesthit")]
-void MyClosestHitShader_AABB_Photon(inout RayPayload rayPayload, in ProceduralPrimitiveAttributes attr)
+void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in ProceduralPrimitiveAttributes attr)
 {
     // PERFORMANCE TIP: it is recommended to minimize values carry over across TraceRay() calls. 
     // Therefore, in cases like retrieving HitWorldPosition(), it is recomputed every time.
@@ -386,15 +436,25 @@ void MyClosestHitShader_AABB_Photon(inout RayPayload rayPayload, in ProceduralPr
     // Shadow component.
     // Trace a shadow ray.
     float3 hitPosition = HitWorldPosition();
-    Ray shadowRay = { hitPosition, normalize(g_sceneCB.lightPosition.xyz - hitPosition) };
-    bool shadowRayHit = TraceShadowRayAndReportIfHit(shadowRay, rayPayload.recursionDepth);
 
-    // Reflected and refracted component.
-    float4 color = float4(0, 0, 0, 0);
-    float4 reflectedColor = float4(0, 0, 0, 0);
-    float4 refractedColor = float4(0, 0, 0, 0);
     float niOvernt;
     float3 realNormal;
+
+    float3 hitPosition = HitWorldPosition();
+
+    Ray newRay;
+    float3 newThroughput = float(1, 1, 1);
+    float3 throughput = rayPayload.throughput;
+
+    //float russian_roulette_prob = max(throughput.x, max(throughput.y, throughput.z));
+    //float threshold = rand_xorshift();
+
+    //if (threshold >= russian_roulette_prob) {
+    //    return;
+    //}
+
+    //newThroughput = throughput * 
+
 
     if (l_materialCB.refractCoef > 0.001) {
         float rayDotNormal = dot(WorldRayDirection(), attr.normal);
@@ -412,54 +472,34 @@ void MyClosestHitShader_AABB_Photon(inout RayPayload rayPayload, in ProceduralPr
         float cosine = dot(-WorldRayDirection(), realNormal);
         float discriminant = 1.0 - niOvernt * niOvernt * (1.0 - cosine * cosine);
 
-        if (discriminant > 0) {
+        if (discriminant > 0) { //refract 
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
-            Ray refractionRay = { HitWorldPosition() + 0.01 * newDir , newDir };
-            float4 refractionColor = TraceRadianceRay(refractionRay, rayPayload.recursionDepth);
-            refractedColor = float4(1.0, 1.0, 1.0, 1.0) * refractionColor;
-            color = refractionColor;
-            //color = float4(newDir.x,0,0,1);
+            newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //材质具体是怎么样的？？？
+            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
+
         }
-        else {
-            Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
-            float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
+        else { // total reflect
+            newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+            TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
 
-            float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), attr.normal, l_materialCB.albedo.xyz);
-            reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
-
-            // Calculate final color.
-            float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-            color = reflectedColor;
         }
 
     }
-    else if (l_materialCB.reflectanceCoef > 0.001)
+    else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
-        Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
-        float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
+        newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+        TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true)
 
-        float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), attr.normal, l_materialCB.albedo.xyz);
-        reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
 
     }
+    else { //diffuse lambert
+        if (rayPayload.prev_specular) {
+            //store photon
+        }
 
-
-    if (l_materialCB.refractCoef > 0.001) {
-        // do nothing
     }
-    else {
-        // Calculate final color.
-        float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-        color = phongColor + reflectedColor;
-    }
-
-    // Apply visibility falloff.
-    float t = RayTCurrent();
-    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
-
-    rayPayload.color = color;
 }
 
 //***************************************************************************
@@ -467,10 +507,9 @@ void MyClosestHitShader_AABB_Photon(inout RayPayload rayPayload, in ProceduralPr
 //***************************************************************************
 
 [shader("miss")]
-void MyMissShader_Photon(inout RayPayload rayPayload)
+void MyMissShader_Photon(inout PhotonRayPayload rayPayload)
 {
-    float4 backgroundColor = float4(BackgroundColor);
-    rayPayload.color = backgroundColor;
+    rayPayload.position = float3(0, 0, 0);
 }
 
 [shader("miss")]
