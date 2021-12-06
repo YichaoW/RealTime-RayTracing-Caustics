@@ -658,7 +658,7 @@ void D3D12RaytracingProceduralGeometry::CreateRaytracingPipelineStateObject()
     // Shader config
     // Defines the maximum sizes in bytes for the ray rayPayload and attribute structure.
     auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    UINT payloadSize = max(sizeof(RayPayload), sizeof(ShadowRayPayload));
+    UINT payloadSize = max(sizeof(PhotonRayPayload), max(sizeof(RayPayload), sizeof(ShadowRayPayload)));
     UINT attributeSize = sizeof(struct ProceduralPrimitiveAttributes);
     shaderConfig->Config(payloadSize, attributeSize);
 
@@ -712,7 +712,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotontracingPipelineStateObject()
     // Shader config
     // Defines the maximum sizes in bytes for the ray rayPayload and attribute structure.
     auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    UINT payloadSize = max(sizeof(RayPayload), sizeof(ShadowRayPayload));
+    UINT payloadSize = max(sizeof(PhotonRayPayload), max(sizeof(RayPayload), sizeof(ShadowRayPayload)));
     UINT attributeSize = sizeof(struct ProceduralPrimitiveAttributes);
     shaderConfig->Config(payloadSize, attributeSize);
 

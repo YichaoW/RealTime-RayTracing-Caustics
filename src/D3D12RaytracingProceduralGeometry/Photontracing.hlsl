@@ -218,7 +218,7 @@ uint rand_xorshift()
     return rng_state * (1.0 / 4294967296.0);
 }
 
-inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
+float3 calculateRandomDirectionInHemisphere(in float3 normal) {
 
     float up = sqrt(rand_xorshift()); // cos(theta)
     float over = sqrt(1 - up * up); // sin(theta)
@@ -251,7 +251,7 @@ inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
         + sin(around) * over * perpendicularDirection2;
 }
 
-inline float3 SquareToSphereUniform(float2 samplePoint)
+float3 SquareToSphereUniform(float2 samplePoint)
 {
     float radius = 1.f;
 
@@ -343,7 +343,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
 
     float3 hitPosition = HitWorldPosition();
 
-    Ray newRay;
+    //Ray newRay;
     float3 newThroughput = float3(1, 1, 1);
     float3 throughput = rayPayload.throughput;
 
@@ -376,12 +376,12 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
         if (discriminant > 0) { //refract 
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
-            newRay = { HitWorldPosition() + 0.01 * newDir, newDir};
+            Ray newRay = { HitWorldPosition() + 0.01 * newDir, newDir};
             TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
             
         }
         else { // total reflect
-            newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+            Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
             TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
 
         }
@@ -390,7 +390,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
-        newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+        Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
         TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
 
 
@@ -417,7 +417,7 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
     float niOvernt;
     float3 realNormal;
 
-    Ray newRay;
+   // Ray newRay;
     float3 newThroughput = float3(1, 1, 1);
     float3 throughput = rayPayload.throughput;
 
@@ -450,12 +450,12 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
         if (discriminant > 0) { //refract 
 
             float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
-            newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //���ʾ�������ô���ģ�����
+            Ray newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //���ʾ�������ô���ģ�����
             TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
 
         }
         else { // total reflect
-            newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+            Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
             TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
 
         }
@@ -464,7 +464,7 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
     else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
-        newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+        Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
         TracePhotonRay(newRay, rayPayload.recursionDepth, newThroughput, true);
 
 
