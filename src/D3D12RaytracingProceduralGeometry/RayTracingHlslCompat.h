@@ -97,6 +97,7 @@ struct SceneConstantBuffer
     XMVECTOR lightPosition;
     XMVECTOR lightAmbientColor;
     XMVECTOR lightDiffuseColor;
+    XMVECTOR lightNormal;
     float    reflectance;
     float    elapsedTime;                 // Elapsed application time.
 };
