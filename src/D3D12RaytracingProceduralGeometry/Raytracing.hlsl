@@ -49,6 +49,7 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
     uint numStructs, stride;
     g_photons.GetDimensions(numStructs, stride);
     float3 color = float3(0,0,0);
+
     float numPhoton = 0;
     float maxDist = 0;
     // naive search 
@@ -67,6 +68,68 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
         return float4(color / numPhoton  / PI / maxDist, 1);
     }
     return float4(0, 0, 0, 1);
+
+    //naive close neighbot
+    //float numPhoton = 3;
+
+    //int smallest = 0;
+    //float smallest_dist = 200000;
+
+    //int second_smallest = 0;
+    //float second_smallest_dist = 200000;
+
+
+    //int third_smallest = 0;
+    //float third_smallest_dist = 200000;
+
+    //float maxDist = 0;
+    //// naive search 
+    //for (int i = 0; i < numStructs; i++) {
+    //    if (!any(g_photons[i].throughput)) {
+    //        continue;
+    //    }
+    //    float dist = distance(g_photons[i].position, hitPosition);
+    //    if (dist < smallest_dist) {
+    //        smallest = i;
+    //        smallest_dist = dist;
+    //    } 
+    //}
+
+    //for (int i = 0; i < numStructs; i++) {
+    //    if (!any(g_photons[i].throughput)) {
+    //        continue;
+    //    }
+    //    float dist = distance(g_photons[i].position, hitPosition);
+    //    if (dist < second_smallest_dist) {
+    //        if (i != smallest) {
+    //            second_smallest = i;
+    //            second_smallest_dist = dist;
+    //        }
+    //    }
+    //}
+
+    //for (int i = 0; i < numStructs; i++) {
+    //    if (!any(g_photons[i].throughput)) {
+    //        continue;
+    //    }
+    //    float dist = distance(g_photons[i].position, hitPosition);
+    //    if (dist < third_smallest_dist) {
+    //        if (i != smallest && i!= second_smallest) {
+    //            third_smallest = i;
+    //            third_smallest_dist = dist;
+    //        }
+    //    }
+    //}
+
+    //color += f * g_photons[smallest].throughput;
+    //color += f * g_photons[second_smallest].throughput;
+    //color += f * g_photons[third_smallest].throughput;
+    //maxDist = third_smallest_dist;
+
+
+    //return float4(color / numPhoton  / PI / maxDist, 1);
+
+    
 }
 
 // Diffuse lighting calculation.

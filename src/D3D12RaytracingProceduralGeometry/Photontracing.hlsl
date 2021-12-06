@@ -304,6 +304,11 @@ void MyRaygenShader_Photon()
     //TODO improve to hemisphere sample
     float2 sampleUV = float2(rand_xorshift(), rand_xorshift());
     float3 rayDir = normalize(SquareToSphereUniform(sampleUV));
+
+    if (dot(g_sceneCB.lightNormal.xyz, rayDir) < 0) {
+        rayDir = -rayDir;
+    }
+
     //float3 rayDir = SamplePointLight(sampleUV);
     sampleUV *= 100;
 

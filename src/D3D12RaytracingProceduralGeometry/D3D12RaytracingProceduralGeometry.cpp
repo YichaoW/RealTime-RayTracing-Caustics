@@ -290,12 +290,17 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         XMFLOAT4 lightPosition;
         XMFLOAT4 lightAmbientColor;
         XMFLOAT4 lightDiffuseColor;
+        XMFLOAT4 lightNormal;
 
         lightPosition = XMFLOAT4(0.0f, 8.0f, -10.0f, 0.0f);
         m_sceneCB->lightPosition = XMLoadFloat4(&lightPosition);
 
+        lightNormal = XMFLOAT4(0.0f - lightPosition.x, 0.0f - lightPosition.y, 0.0f - lightPosition.z, 0.0f);
+        m_sceneCB->lightNormal = XMLoadFloat4(&lightNormal);
+
         lightAmbientColor = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
         m_sceneCB->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
+
 
         float d = 0.6f;
         lightDiffuseColor = XMFLOAT4(d, d, d, 1.0f);
@@ -862,9 +867,9 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
-           // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
-            m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2,2,2));
+            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+           //m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
+            //m_aabbs[offset + 2] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2,2,2));
             offset += AnalyticPrimitive::Count;
         }
 
