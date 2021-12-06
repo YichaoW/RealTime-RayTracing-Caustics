@@ -765,7 +765,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     auto device = m_deviceResources->GetD3DDevice();
 
     D3D12_RESOURCE_ALLOCATION_INFO resDesc = {};
-    resDesc.SizeInBytes = NUM_PHOTONS * NUM_PHOTONS * sizeof(Photon);
+    resDesc.SizeInBytes = NUM_PHOTONS * sizeof(Photon);
     resDesc.Alignment = 0;
     auto uavDesc = CD3DX12_RESOURCE_DESC::Buffer(resDesc, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -780,7 +780,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers() {
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
     UAVDesc.Buffer.FirstElement = 0;
-    UAVDesc.Buffer.NumElements = NUM_PHOTONS * NUM_PHOTONS;
+    UAVDesc.Buffer.NumElements = NUM_PHOTONS;
     UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
     UAVDesc.Buffer.CounterOffsetInBytes = 0;
     UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
@@ -1583,8 +1583,8 @@ void D3D12RaytracingProceduralGeometry::DoPhotontracing()
         dispatchDesc->MissShaderTable.StrideInBytes = m_photontracing_res.missShaderTableStrideInBytes;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = m_photontracing_res.rayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_photontracing_res.rayGenShaderTable->GetDesc().Width;
-        dispatchDesc->Width = m_width;
-        dispatchDesc->Height = m_height;
+        dispatchDesc->Width = PHOTONMAP_WIDTH;
+        dispatchDesc->Height = PHOTONMAP_HEIGHT;
         dispatchDesc->Depth = 1;
         raytracingCommandList->SetPipelineState1(stateObject);
 

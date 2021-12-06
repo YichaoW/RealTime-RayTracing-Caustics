@@ -35,12 +35,19 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 //***************************************************************************
 //****************------ Utility functions -------***************************
 //***************************************************************************
+
+float rnd3( float2 uv, float2 k) { return cos( fmod( 123456789., 256. * dot(uv,k) ) ); }
+
 void StorePhoton() {
-    int index = DispatchRaysIndex().x;
+    uint3 launchIndex = DispatchRaysIndex();
+    uint3 launchDimension = DispatchRaysDimensions();
+    int index = launchIndex.y * launchDimension.x + launchIndex.x;
     Photon p;
-    p.throughput = float3(1, 0, 0);
-    g_photons[0] = p;
+    p.throughput = rnd3(DispatchRaysIndex().xy, float2(23.1406926327792690, 2.6651441426902251));
+    g_photons[index] = p;
 }
+
+
 
 // Diffuse lighting calculation.
 float CalculateDiffuseCoefficient(in float3 hitPosition, in float3 incidentLightRay, in float3 normal)

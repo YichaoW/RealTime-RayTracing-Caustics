@@ -45,6 +45,26 @@ RWStructuredBuffer<Photon> g_photons : register(u1);
 //****************------ Utility functions -------***************************
 //***************************************************************************
 
+float4 computeCaustics(in float3 hitPosition) {
+    uint numStructs, stride;
+    g_photons.GetDimensions(numStructs, stride);
+    float3 color = float3(0,0,0);
+    float numPhoton = 0;
+
+    // naive search 
+    for (int i = 0; i < numStructs; i++) {
+        float dist = distance(g_photons[i].position, hitPosition);
+        if (dist < PHOTON_SEARCH_RADIUS) {
+            color += g_photons[i].throughput;
+            numPhoton++;
+        }
+    }
+    if (numPhoton != 0) {
+        return float4(color / numPhoton, 1);
+    }
+    return float4(g_photons[0].throughput, 1);
+}
+
 // Diffuse lighting calculation.
 float CalculateDiffuseCoefficient(in float3 hitPosition, in float3 incidentLightRay, in float3 normal)
 {
@@ -173,8 +193,12 @@ void MyRaygenShader()
     // Cast a ray into the scene and retrieve a shaded color.
     UINT currentRecursionDepth = 0;
     float4 color = TraceRadianceRay(ray, currentRecursionDepth);
-    color = float4(g_photons[0].throughput, 1);
     // Write the raytraced color to the output texture.
+
+    uint3 launchIndex = DispatchRaysIndex();
+    uint3 launchDimension = DispatchRaysDimensions();
+    int index = launchIndex.y * launchDimension.x + launchIndex.x;
+    color = float4(g_photons[index].throughput,1);
     g_renderTarget[DispatchRaysIndex().xy] = color;
 }
 
@@ -306,7 +330,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     else {
         // Calculate final color.
         float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-        color = phongColor + reflectedColor;
+        color += phongColor + reflectedColor + computeCaustics(hitPosition);
     }
 
     // Apply visibility falloff.

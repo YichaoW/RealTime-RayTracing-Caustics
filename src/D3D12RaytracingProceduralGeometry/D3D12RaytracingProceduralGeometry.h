@@ -47,7 +47,9 @@ private:
     //Photon Mapping
     static const UINT NUM_GBUFFERS = 4;
     static const UINT NUM_RENDERTARGETS = 1;
-    static const UINT NUM_PHOTONS = 1;
+    static const UINT NUM_PHOTONS = 1 << 20;
+    static const UINT PHOTONMAP_WIDTH = 256;
+    static const UINT PHOTONMAP_HEIGHT = NUM_PHOTONS / PHOTONMAP_WIDTH;
     
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> m_dxrDevice;
