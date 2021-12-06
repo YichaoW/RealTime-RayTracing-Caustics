@@ -195,10 +195,10 @@ void MyRaygenShader()
     float4 color = TraceRadianceRay(ray, currentRecursionDepth);
     // Write the raytraced color to the output texture.
 
-    uint3 launchIndex = DispatchRaysIndex();
-    uint3 launchDimension = DispatchRaysDimensions();
-    int index = launchIndex.y * launchDimension.x + launchIndex.x;
-    color = float4(g_photons[index].throughput,1);
+    // uint3 launchIndex = DispatchRaysIndex();
+    // uint3 launchDimension = DispatchRaysDimensions();
+    // int index = launchIndex.y * launchDimension.x + launchIndex.x;
+    // color = float4(g_photons[index].throughput,1);
     g_renderTarget[DispatchRaysIndex().xy] = color;
 }
 
@@ -336,7 +336,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     // Apply visibility falloff.
     float t = RayTCurrent();
     color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
-
+    color = computeCaustics(hitPosition);
     rayPayload.color = color;
 }
 

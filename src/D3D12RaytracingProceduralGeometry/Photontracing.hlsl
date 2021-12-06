@@ -38,12 +38,12 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 
 float rnd3( float2 uv, float2 k) { return cos( fmod( 123456789., 256. * dot(uv,k) ) ); }
 
-void StorePhoton() {
+void StorePhoton(Photon p) {
     uint3 launchIndex = DispatchRaysIndex();
     uint3 launchDimension = DispatchRaysDimensions();
     int index = launchIndex.y * launchDimension.x + launchIndex.x;
-    Photon p;
-    p.throughput = rnd3(DispatchRaysIndex().xy, float2(23.1406926327792690, 2.6651441426902251));
+    // Photon p;
+    // p.throughput = rnd3(DispatchRaysIndex().xy, float2(23.1406926327792690, 2.6651441426902251));
     g_photons[index] = p;
 }
 
@@ -398,6 +398,8 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     else { //diffuse lambert
         if (rayPayload.prev_specular) {
             //store photon
+            Photon p = {throughput, hitPosition, -rayPayload.direction};
+            StorePhoton(p);
         }
 
     }
@@ -472,6 +474,8 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
     else { //diffuse lambert
         if (rayPayload.prev_specular) {
             //store photon
+            Photon p = {throughput, hitPosition, -rayPayload.direction};
+            StorePhoton(p);
         }
 
     }
