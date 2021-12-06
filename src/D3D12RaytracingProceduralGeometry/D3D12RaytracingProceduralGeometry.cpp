@@ -169,7 +169,7 @@ void D3D12RaytracingProceduralGeometry::UpdateAABBPrimitiveAttributes(float anim
         using namespace AnalyticPrimitive;
         SetTransformForAABB(offset + AABB, mScale15y, mIdentity);
         SetTransformForAABB(offset + Floor, XMMatrixScaling(100, 0.1, 100), mIdentity);
-        SetTransformForAABB(offset + Spheres, mScale15, mIdentity);
+        SetTransformForAABB(offset + Sphere, mIdentity, mIdentity);
         offset += AnalyticPrimitive::Count;
     }
 
@@ -241,7 +241,7 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         {
             using namespace AnalyticPrimitive;
             SetAttributes(offset + AABB, ChromiumReflectance,1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
-            SetAttributes(offset + Spheres, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
+            SetAttributes(offset + Sphere, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
             SetAttributes(offset + Floor, white);
             offset += AnalyticPrimitive::Count;
         }
@@ -291,7 +291,7 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         XMFLOAT4 lightAmbientColor;
         XMFLOAT4 lightDiffuseColor;
 
-        lightPosition = XMFLOAT4(0.0f, 18.0f, -20.0f, 0.0f);
+        lightPosition = XMFLOAT4(0.0f, 8.0f, -10.0f, 0.0f);
         m_sceneCB->lightPosition = XMLoadFloat4(&lightPosition);
 
         lightAmbientColor = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
@@ -864,7 +864,7 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
             using namespace AnalyticPrimitive;
             //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
            // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
-            m_aabbs[offset + Spheres] = InitializeAABB(XMFLOAT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+            m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2,2,2));
             offset += AnalyticPrimitive::Count;
         }
 

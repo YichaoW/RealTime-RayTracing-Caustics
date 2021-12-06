@@ -115,6 +115,26 @@ bool RaySolidSphereIntersectionTest(in Ray ray, out float thit, out float tmax, 
     return true;
 }
 
+bool RaySphereIntersectionTest(in Ray ray, out float thit, out ProceduralPrimitiveAttributes attr)
+{
+    float3 center = { 0,0,0 };
+    float  radii = 1;
+    bool hitFound = false;
+    float _thit;
+    float _tmax;
+    ProceduralPrimitiveAttributes _attr = (ProceduralPrimitiveAttributes)0;
+    if (RaySphereIntersectionTest(ray, _thit, _tmax, _attr, center, radii))
+    {
+        if (_thit < thit)
+        {
+            thit = _thit;
+            attr = _attr;
+            hitFound = true;
+        }
+    }
+    return hitFound;
+}
+
 // Test if a ray with RayFlags and segment <RayTMin(), RayTCurrent()> intersects multiple hollow spheres.
 bool RaySpheresIntersectionTest(in Ray ray, out float thit, out ProceduralPrimitiveAttributes attr)
 {
