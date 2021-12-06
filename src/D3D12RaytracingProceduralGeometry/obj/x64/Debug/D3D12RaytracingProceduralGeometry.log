@@ -1,4 +1,12 @@
-﻿  D3D12RaytracingProceduralGeometry.cpp
+﻿Raytracing.hlsl(257,57): warning GBFFABD58: implicit truncation of vector type
+      float4 causticsColor = computeCaustics(hitPosition, phongColor);
+                                                          ^
+Raytracing.hlsl(342,60): warning GBFFABD58: implicit truncation of vector type
+          float4 causticColor = computeCaustics(hitPosition, phongColor);
+                                                             ^
+FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
+  
+  D3D12RaytracingProceduralGeometry.cpp
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(120,44): warning C4474: 'printf' : too many arguments passed for format string
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(120,44): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(147,88): warning C4244: 'argument': conversion from 'tinyobj::real_t' to 'const unsigned __int64', possible loss of data

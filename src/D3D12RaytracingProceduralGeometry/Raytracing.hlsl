@@ -340,7 +340,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
         // Calculate final color.
         float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
         float4 causticColor = computeCaustics(hitPosition, phongColor);
-        color += phongColor + reflectedColor + causticColor;
+        color += phongColor + reflectedColor +causticColor;
     }
 
     // Apply visibility falloff.
