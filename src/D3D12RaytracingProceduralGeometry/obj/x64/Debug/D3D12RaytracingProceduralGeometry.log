@@ -1,13 +1,47 @@
-﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
-  
+﻿Photontracing.hlsl(189,25): error G30564CF7: use of undeclared identifier 'SQRT_OF_ONE_THIRD'
+      if (abs(normal.x) < SQRT_OF_ONE_THIRD) {
+                          ^
+Photontracing.hlsl(192,30): error G30564CF7: use of undeclared identifier 'SQRT_OF_ONE_THIRD'
+      else if (abs(normal.y) < SQRT_OF_ONE_THIRD) {
+                               ^
+Photontracing.hlsl(224,15): error GBBEA2599: redefinition of 'calculateRandomDirectionInHemisphere'
+  inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
+                ^
+  Photontracing.hlsl:177:15: note: previous definition is here
+  inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
+                ^
+Photontracing.hlsl(236,25): error G30564CF7: use of undeclared identifier 'SQRT_OF_ONE_THIRD'
+      if (abs(normal.x) < SQRT_OF_ONE_THIRD) {
+                          ^
+Photontracing.hlsl(239,30): error G30564CF7: use of undeclared identifier 'SQRT_OF_ONE_THIRD'
+      else if (abs(normal.y) < SQRT_OF_ONE_THIRD) {
+                               ^
+Photontracing.hlsl(353,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //<U+6750><U+8D28><U+5177><U+4F53><U+662F><U+600E><U+4E48><U+6837><U+7684><U+FF1F><U+FF1F><U+FF1F>
+                       ^
+Photontracing.hlsl(356,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+                       ^
+Photontracing.hlsl(364,18): error G98514E91: expected expression
+          newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+                   ^
+Photontracing.hlsl(368,15): warning GBFFABD58: implicit truncation of vector type
+          float newDir = calculateRandomDirectionInHemisphere(triangleNormal);
+                ^
+Photontracing.hlsl(369,18): error G98514E91: expected expression
+          newRay = { HitWorldPosition() , newDir };
+                   ^
+Photontracing.hlsl(374,5): error G30564CF7: use of undeclared identifier 'color'
+      color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
+      ^
+Photontracing.hlsl(374,18): error G30564CF7: use of undeclared identifier 'color'
+      color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
+                   ^
+Photontracing.hlsl(376,16): error G1A4676F8: no member named 'color' in 'PhotonRayPayload'
+      rayPayload.color = color;
+      ~~~~~~~~~~ ^
+Photontracing.hlsl(376,24): error G30564CF7: use of undeclared identifier 'color'
+      rayPayload.color = color;
+                         ^
 FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
-  stdafx.cpp
-  D3D12RaytracingProceduralGeometry.cpp
-  Main.cpp
-  DeviceResources.cpp
-  DXSample.cpp
-  PerformanceTimers.cpp
-  Win32Application.cpp
-  Generating Code...
-  D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe

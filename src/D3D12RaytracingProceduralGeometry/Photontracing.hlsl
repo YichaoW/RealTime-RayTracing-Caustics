@@ -35,12 +35,6 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 //***************************************************************************
 //****************------ Utility functions -------***************************
 //***************************************************************************
-void StorePhoton() {
-    int index = DispatchRaysIndex().x;
-    Photon p;
-    p.throughput = float3(1, 0, 0);
-    g_photons[0] = p;
-}
 
 // Diffuse lighting calculation.
 float CalculateDiffuseCoefficient(in float3 hitPosition, in float3 incidentLightRay, in float3 normal)
@@ -53,7 +47,7 @@ float CalculateDiffuseCoefficient(in float3 hitPosition, in float3 incidentLight
 float4 CalculateSpecularCoefficient(in float3 hitPosition, in float3 incidentLightRay, in float3 normal, in float specularPower)
 {
     float3 reflectedLightRay = normalize(reflect(incidentLightRay, normal));
-    return pow(saturate(dot(reflectedLightRay, normalize (-WorldRayDirection()))), specularPower);
+    return pow(saturate(dot(reflectedLightRay, normalize(-WorldRayDirection()))), specularPower);
 }
 
 
@@ -86,7 +80,7 @@ float4 CalculatePhongLighting(in float4 albedo, in float3 normal, in bool isInSh
     float4 ambientColorMax = g_sceneCB.lightAmbientColor;
     float a = 1 - saturate(dot(normal, float3(0, -1, 0)));
     ambientColor = albedo * lerp(ambientColorMin, ambientColorMax, a);
-    
+
     return ambientColor + diffuseColor + specularColor;
 }
 
@@ -157,6 +151,110 @@ bool TraceShadowRayAndReportIfHit(in Ray ray, in UINT currentRayRecursionDepth)
     return shadowPayload.hit;
 }
 
+
+//https://www.reedbeta.com/blog/quick-and-easy-gpu-random-numbers-in-d3d11/ random number in d3d11
+
+static uint rng_state;
+uint wang_hash(uint seed)
+{
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
+}
+
+uint rand_xorshift()
+{
+    // Xorshift algorithm from George Marsaglia's paper
+    rng_state ^= (rng_state << 13);
+    rng_state ^= (rng_state >> 17);
+    rng_state ^= (rng_state << 5);
+    return rng_state * (1.0 / 4294967296.0);
+}
+
+inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
+
+    float up = sqrt(rand_xorshift()); // cos(theta)
+    float over = sqrt(1 - up * up); // sin(theta)
+    float around = rand_xorshift() * TWO_PI;
+
+    // Find a direction that is not the normal based off of whether or not the
+    // normal's components are all equal to sqrt(1/3) or whether or not at
+    // least one component is less than sqrt(1/3). Learned this trick from
+    // Peter Kutz.
+
+    float3 directionNotNormal;
+    if (abs(normal.x) < SQRT_OF_ONE_THIRD) {
+        directionNotNormal = float3(1, 0, 0);
+    }
+    else if (abs(normal.y) < SQRT_OF_ONE_THIRD) {
+        directionNotNormal = float3(0, 1, 0);
+    }
+    else {
+        directionNotNormal = float3(0, 0, 1);
+    }
+
+    // Use not-normal direction to generate two perpendicular directions
+    float3 perpendicularDirection1 =
+        normalize(cross(normal, directionNotNormal));
+    float3 perpendicularDirection2 =
+        normalize(cross(normal, perpendicularDirection1));
+
+    return up * normal
+        + cos(around) * over * perpendicularDirection1
+        + sin(around) * over * perpendicularDirection2;
+}
+
+inline float3 SquareToSphereUniform(float2 samplePoint)
+{
+    float radius = 1.f;
+
+    float phi = samplePoint.y * PI;
+    float theta = samplePoint.x * TWO_PI;
+
+    float3 result;
+    result.x = radius * cos(theta) * sin(phi);
+    result.y = radius * cos(phi);
+    result.z = radius * sin(theta) * sin(phi);
+    return result;
+}
+
+inline float3 calculateRandomDirectionInHemisphere(in float3 normal) {
+
+    float up = sqrt(rand_xorshift()); // cos(theta)
+    float over = sqrt(1 - up * up); // sin(theta)
+    float around = rand_xorshift() * TWO_PI;
+
+    // Find a direction that is not the normal based off of whether or not the
+    // normal's components are all equal to sqrt(1/3) or whether or not at
+    // least one component is less than sqrt(1/3). Learned this trick from
+    // Peter Kutz.
+
+    float3 directionNotNormal;
+    if (abs(normal.x) < SQRT_OF_ONE_THIRD) {
+        directionNotNormal = float3(1, 0, 0);
+    }
+    else if (abs(normal.y) < SQRT_OF_ONE_THIRD) {
+        directionNotNormal = float3(0, 1, 0);
+    }
+    else {
+        directionNotNormal = float3(0, 0, 1);
+    }
+
+    // Use not-normal direction to generate two perpendicular directions
+    float3 perpendicularDirection1 =
+        normalize(cross(normal, directionNotNormal));
+    float3 perpendicularDirection2 =
+        normalize(cross(normal, perpendicularDirection1));
+
+    return up * normal
+        + cos(around) * over * perpendicularDirection1
+        + sin(around) * over * perpendicularDirection2;
+}
+
+
 //***************************************************************************
 //********************------ Ray gen shader.. -------************************
 //***************************************************************************
@@ -164,18 +262,46 @@ bool TraceShadowRayAndReportIfHit(in Ray ray, in UINT currentRayRecursionDepth)
 [shader("raygeneration")]
 void MyRaygenShader_Photon()
 {
-    StorePhoton();
     // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
-    Ray ray = GenerateCameraRay(DispatchRaysIndex().xy, g_sceneCB.cameraPosition.xyz, g_sceneCB.projectionToWorld);
- 
-    // Cast a ray into the scene and retrieve a shaded color.
-    UINT currentRecursionDepth = 0;
-    float4 color = TraceRadianceRay(ray, currentRecursionDepth);
+    //Ray ray = GenerateCameraRay(DispatchRaysIndex().xy, g_sceneCB.cameraPosition.xyz, g_sceneCB.projectionToWorld);
 
-    color = float4(g_photons[0].throughput, 1);
+    float2 sampleSeed = DispatchRaysIndex().xy;
+    float2 bufferDimension = DispatchRaysDimensions().xy;
 
-    // Write the raytraced color to the output texture.
-    g_renderTarget[DispatchRaysIndex().xy] = color;
+    rng_state = sampleSeed.x + bufferDimension.x * sampleSeed.y;
+    rng_state = uint(wang_hash(rng_state));
+
+
+    //TODO improve to hemisphere sample
+    float2 sampleUV = float2(rand_xorshift(), rand_xorshift());
+    float3 rayDir = SquareToSphereUniform(sampleUV);
+
+
+    RayDesc rayDesc;
+    rayDesc.Origin = g_sceneCB.lightPosition.xyz;
+    rayDesc.Direction = rayDir;
+    // Set TMin to a zero value to avoid aliasing artifcats along contact areas.
+    // Note: make sure to enable back-face culling so as to avoid surface face fighting.
+    rayDesc.TMin = 0;
+    rayDesc.TMax = 10000;
+
+    PhotonRayPayload rayPayload =
+    {
+        float3(0, 0, 0),    // hit position
+        rayDir,             // ray direction 
+        false,              // previous hit is specular
+        float3(1, 1, 1),    // throughput
+        0,
+    };
+
+    TraceRay(g_scene,
+        RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
+        TraceRayParameters::InstanceMask,
+        TraceRayParameters::HitGroup::Offset[RayType::Radiance],
+        TraceRayParameters::HitGroup::GeometryStride,
+        TraceRayParameters::MissShader::Offset[RayType::Radiance],
+        rayDesc, rayPayload);
+
 }
 
 //***************************************************************************
@@ -183,7 +309,7 @@ void MyRaygenShader_Photon()
 //***************************************************************************
 
 [shader("closesthit")]
-void MyClosestHitShader_Triangle_Photon(inout RayPayload rayPayload, in BuiltInTriangleIntersectionAttributes attr)
+void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in BuiltInTriangleIntersectionAttributes attr)
 {
     // Get the base index of the triangle's first 16 bit index.
     uint indexSizeInBytes = 2;
@@ -197,38 +323,58 @@ void MyClosestHitShader_Triangle_Photon(inout RayPayload rayPayload, in BuiltInT
     // Retrieve corresponding vertex normals for the triangle vertices.
     float3 triangleNormal = g_vertices[indices[0]].normal;
 
-    // PERFORMANCE TIP: it is recommended to avoid values carry over across TraceRay() calls. 
-    // Therefore, in cases like retrieving HitWorldPosition(), it is recomputed every time.
+    float niOvernt;
+    float3 realNormal;
 
-    // Shadow component.
-    // Trace a shadow ray.
     float3 hitPosition = HitWorldPosition();
-    Ray shadowRay = { hitPosition, normalize(g_sceneCB.lightPosition.xyz - hitPosition) };
-    bool shadowRayHit = TraceShadowRayAndReportIfHit(shadowRay, rayPayload.recursionDepth);
 
-    float checkers = AnalyticalCheckersTexture(HitWorldPosition(), triangleNormal, g_sceneCB.cameraPosition.xyz, g_sceneCB.projectionToWorld);
+    Ray newRay;
 
     // Reflected component.
-    float4 reflectedColor = float4(0, 0, 0, 0);
-    if (l_materialCB.reflectanceCoef > 0.001 )
+    if (l_materialCB.refractCoef > 0.001) {
+        float rayDotNormal = dot(WorldRayDirection(), triangleNormal);
+        float temp = 1.5;
+        if (rayDotNormal > 0.0) {
+            realNormal = -triangleNormal;
+            niOvernt = temp;
+        }
+        else {
+            realNormal = triangleNormal;
+            niOvernt = 1.0 / temp;
+        }
+
+
+        float cosine = dot(-WorldRayDirection(), realNormal);
+        float discriminant = 1.0 - niOvernt * niOvernt * (1.0 - cosine * cosine);
+
+        if (discriminant > 0) { //refract 
+
+            float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
+            newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //材质具体是怎么样的？？？
+        }
+        else { // total reflect
+            newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+
+        }
+
+    }
+    else if (l_materialCB.reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
-        Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
-        float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
+        newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
 
-        float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), triangleNormal, l_materialCB.albedo.xyz);
-        reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
     }
-
-    // Calculate final color.
-    float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-    float4 color = checkers * (phongColor + reflectedColor);
+    else { //diffuse lambert
+        float newDir = calculateRandomDirectionInHemisphere(triangleNormal);
+        newRay = { HitWorldPosition() , newDir };
+    }
 
     // Apply visibility falloff.
     float t = RayTCurrent();
-    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
+    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
 
     rayPayload.color = color;
+
 }
 
 [shader("closesthit")]
@@ -311,7 +457,7 @@ void MyClosestHitShader_AABB_Photon(inout RayPayload rayPayload, in ProceduralPr
 
     // Apply visibility falloff.
     float t = RayTCurrent();
-    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
+    color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002 * t * t * t));
 
     rayPayload.color = color;
 }
@@ -354,7 +500,7 @@ Ray GetRayInAABBPrimitiveLocalSpace()
 void MyIntersectionShader_AnalyticPrimitive_Photon()
 {
     Ray localRay = GetRayInAABBPrimitiveLocalSpace();
-    AnalyticPrimitive::Enum primitiveType = (AnalyticPrimitive::Enum) l_aabbCB.primitiveType;
+    AnalyticPrimitive::Enum primitiveType = (AnalyticPrimitive::Enum)l_aabbCB.primitiveType;
 
     float thit;
     ProceduralPrimitiveAttributes attr = (ProceduralPrimitiveAttributes)0;
@@ -372,8 +518,8 @@ void MyIntersectionShader_AnalyticPrimitive_Photon()
 void MyIntersectionShader_VolumetricPrimitive_Photon()
 {
     Ray localRay = GetRayInAABBPrimitiveLocalSpace();
-    VolumetricPrimitive::Enum primitiveType = (VolumetricPrimitive::Enum) l_aabbCB.primitiveType;
-    
+    VolumetricPrimitive::Enum primitiveType = (VolumetricPrimitive::Enum)l_aabbCB.primitiveType;
+
     float thit;
     ProceduralPrimitiveAttributes attr = (ProceduralPrimitiveAttributes)0;
     if (RayVolumetricGeometryIntersectionTest(localRay, primitiveType, thit, attr, g_sceneCB.elapsedTime))
@@ -390,7 +536,7 @@ void MyIntersectionShader_VolumetricPrimitive_Photon()
 void MyIntersectionShader_SignedDistancePrimitive_Photon()
 {
     Ray localRay = GetRayInAABBPrimitiveLocalSpace();
-    SignedDistancePrimitive::Enum primitiveType = (SignedDistancePrimitive::Enum) l_aabbCB.primitiveType;
+    SignedDistancePrimitive::Enum primitiveType = (SignedDistancePrimitive::Enum)l_aabbCB.primitiveType;
 
     float thit;
     ProceduralPrimitiveAttributes attr = (ProceduralPrimitiveAttributes)0;
@@ -399,7 +545,7 @@ void MyIntersectionShader_SignedDistancePrimitive_Photon()
         PrimitiveInstancePerFrameBuffer aabbAttribute = g_AABBPrimitiveAttributes[l_aabbCB.instanceIndex];
         attr.normal = mul(attr.normal, (float3x3) aabbAttribute.localSpaceToBottomLevelAS);
         attr.normal = normalize(mul((float3x3) ObjectToWorld3x4(), attr.normal));
-        
+
         ReportHit(thit, /*hitKind*/ 0, attr);
     }
 }
