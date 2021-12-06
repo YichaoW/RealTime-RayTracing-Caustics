@@ -1,4 +1,20 @@
-﻿FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
+﻿Photontracing.hlsl(379,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition() + 0.01 * newDir , newDir };
+                       ^
+Photontracing.hlsl(384,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+                       ^
+Photontracing.hlsl(393,18): error G98514E91: expected expression
+          newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+                   ^
+Photontracing.hlsl(453,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition() + 0.01 * newDir , newDir };         //<U+951F><U+65A4><U+62F7><U+951F><U+7EDE><U+6485><U+62F7><U+951F><U+65A4><U+62F7><U+951F><U+65A4><U+62F7><U+951F><U+65A4><U+62F7><U+4E48><U+951F><U+65A4><U+62F7><U+951F><U+4FA5><U+FF4F><U+62F7><U+951F><U+65A4><U+62F7><U+951F><U+65A4><U+62F7>
+                       ^
+Photontracing.hlsl(458,22): error G98514E91: expected expression
+              newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+                       ^
+Photontracing.hlsl(467,18): error G98514E91: expected expression
+          newRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+                   ^
+FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
-  D3D12RaytracingProceduralGeometry.cpp
-  D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe

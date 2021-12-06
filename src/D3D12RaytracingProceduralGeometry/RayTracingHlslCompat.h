@@ -52,6 +52,11 @@ typedef UINT16 Index;
 #define MAX_RAY_RECURSION_DEPTH 7    // ~ primary rays + reflections + shadow rays from reflected geometry.
 #define PHOTON_SEARCH_RADIUS 0.2f
 
+#define PI 3.1415926535897932384626422832795028841971f
+#define INV_PI 0.318309886f
+#define TWO_PI 6.2831853071795864769252867665590057683943f
+#define SQRT_OF_ONE_THIRD 0.5773502691896257645091487805019574556476f
+
 struct Photon {
     XMFLOAT3 throughput;
     XMFLOAT3 position;
@@ -59,12 +64,13 @@ struct Photon {
 };
 
 struct PhotonRayPayload {
-
-    XMFLOAT4 color;
-    UINT   recursionDepth;
+    XMFLOAT3 position;
+    XMFLOAT3 direction;
     bool prev_specular;
     XMFLOAT3 throughput;
+    UINT recursionDepth;
 };
+
 
 
 
