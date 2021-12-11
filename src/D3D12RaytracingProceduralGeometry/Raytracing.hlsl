@@ -108,14 +108,14 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
      float3 pos = hitPosition;
                 int photonIndex = GetPhotonSpatialIndex(pos);
                 if (photonIndex == -1) {
-                    return float4(0, 0, 1, 1);
+                    return float4(0, 0, 0, 1);
                 }
                 Photon p = g_photons[photonIndex];
                 float4 color = float4(p.throughput * f * p.count, 1);
                 if (p.count > 0) {
                     return color;// float4(1, 0, 0, 1);
                 }
-    return float4(0, 1, 0, 1);
+    return float4(0, 0, 0, 1);
 
 }
 

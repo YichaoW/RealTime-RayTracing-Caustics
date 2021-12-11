@@ -204,11 +204,11 @@ int GetPhotonSpatialIndex(in float3 pos) {
         return -1;
     }
 
-    float cellSize = 0.01f;
+    float cellSize = 0.5f;
     int width = (maxBound - minBound) / cellSize;
     pos = (floor(pos - minBound/ cellSize));
-    return hashSpatial(pos, 1<<22);
-    //return pos.x + pos.y * width + pos.z * width *width;
+    //return hashSpatial(pos, 1<<22);
+    return pos.x + pos.y * width + pos.z * width *width;
 
     // float3 GridSize = float3(100,100,100);
     // float cellSize = 1;
