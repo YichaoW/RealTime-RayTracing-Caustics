@@ -45,7 +45,7 @@ RWStructuredBuffer<Photon> g_photons : register(u1);
 //****************------ Utility functions -------***************************
 //***************************************************************************
 
-float4 computeCaustics(in float3 hitPosition, in float3 f) {
+float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
     uint numStructs, stride;
     g_photons.GetDimensions(numStructs, stride);
     float3 color = float3(0,0,0);
@@ -69,6 +69,54 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
         return float4(color / numPhoton  / PI / maxDist, 1);
     }
     return float4(0, 0, 0, 1);
+}
+
+float4 computeCaustics(in float3 hitPosition, in float3 f) {
+    // float3 color = (0,0,0);
+    // float r = 0.2f;
+    // int count = 0;
+    //     float maxDist = 0;
+
+    // for (int i = -1; i < 1; i ++) {
+    //     for (int j = -1; j < 1; j ++) {
+    //         for (int k = -1; k < 1; k ++) {
+    //             float3 pos = hitPosition;
+    //             pos.x += i;
+    //             pos.y += j;
+    //             pos.z += k;
+    //             int photonIndex = GetPhotonSpatialIndex(pos);
+    //             if (photonIndex == -1) {
+    //                 continue;
+    //             }
+    //             Photon p = g_photons[photonIndex];
+    //             float dist = distance(p.position, hitPosition);
+    //              maxDist = max(dist, maxDist);
+    //             // if (p.count > 0) {
+    //             //    return float4(1,0,0,1);
+    //             // }
+    //             color += p.throughput * f;
+    //             count++;
+    //         }
+    //     }
+    // }
+
+    // if (count != 0) {
+    //     return float4(color / count  / PI / maxDist, 1);
+    // }
+    // return float4(0, 0, 0, 1);
+
+     float3 pos = hitPosition;
+                int photonIndex = GetPhotonSpatialIndex(pos);
+                if (photonIndex == -1) {
+                    return float4(0, 0, 1, 1);
+                }
+                Photon p = g_photons[photonIndex];
+                float4 color = float4(p.throughput * f * p.count, 1);
+                if (p.count > 0) {
+                    return color;// float4(1, 0, 0, 1);
+                }
+    return float4(0, 1, 0, 1);
+
 }
 
 // Diffuse lighting calculation.
@@ -255,7 +303,8 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
 
     float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
     float4 causticsColor = computeCaustics(hitPosition, phongColor);
-    float4 color = checkers * (phongColor + reflectedColor) + causticsColor;;
+   // float4 color = checkers * (phongColor + reflectedColor) + causticsColor;;
+    float4 color = phongColor + reflectedColor + causticsColor;;
 
     // Apply visibility falloff.
     float t = RayTCurrent();

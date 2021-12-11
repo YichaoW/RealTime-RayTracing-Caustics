@@ -38,13 +38,34 @@ RWStructuredBuffer<Photon> g_photons: register(u1);
 
 float rnd3( float2 uv, float2 k) { return cos( fmod( 123456789., 256. * dot(uv,k) ) ); }
 
-void StorePhoton(Photon p) {
+void StorePhotonNaive(Photon p) {
     uint3 launchIndex = DispatchRaysIndex();
     uint3 launchDimension = DispatchRaysDimensions();
     int index = launchIndex.y * launchDimension.x + launchIndex.x;
     // Photon p;
     // p.throughput = rnd3(DispatchRaysIndex().xy, float2(23.1406926327792690, 2.6651441426902251));
     g_photons[index] = p;
+}
+
+void StorePhoton(Photon p) {
+    int photonIndex = GetPhotonSpatialIndex(p.position);
+    if (photonIndex == -1) {
+        return;
+    }
+    Photon temp = g_photons[photonIndex];
+
+    if (temp.count == 0) {
+        p.count = 1;
+        g_photons[photonIndex] = p;
+    }
+    else {
+        float3 oldV;
+        // InterlockedAdd(g_photons[photonIndex].throughput.x, p.throughput.x, oldV.x);
+        // InterlockedAdd(g_photons[photonIndex].throughput.y, p.throughput.y, oldV.y);
+        // InterlockedAdd(g_photons[photonIndex].throughput.z, p.throughput.z, oldV.z);
+        InterlockedAdd(g_photons[photonIndex].count, 1, oldV.z);
+
+    }
 }
 
 // Diffuse lighting calculation.
@@ -332,11 +353,23 @@ void MyRaygenShader_Photon()
         TraceRayParameters::MissShader::Offset[RayType::Radiance],
         rayDesc, rayPayload);
 
-    uint3 launchIndex = DispatchRaysIndex();
-    uint3 launchDimension = DispatchRaysDimensions();
-    int index = launchIndex.y * launchDimension.x + launchIndex.x;
-    Photon p = g_photons[index];
-    g_renderTarget[DispatchRaysIndex().xy] = float4(p.position,1);
+    // uint3 launchIndex = DispatchRaysIndex();
+    // uint3 launchDimension = DispatchRaysDimensions();
+    // int index = launchIndex.y * launchDimension.x + launchIndex.x;
+    // Photon p = g_photons[index];
+    //rayPayload.position = float3(1,0,0);
+
+    //  int minBound = -50;
+    // int maxBound = 50;
+    // float cellSize = 0.2f;
+    // int width = (maxBound - minBound) / cellSize;
+    // float3 pos = (floor(rayPayload.position - minBound/ cellSize));
+    // int index = pos.x + pos.y * 100 + pos.z * 100 *100;;
+    // float3 color = float3(1,0,0);
+    // if (index > 1) {
+    //     color.y = 1;
+    // }
+    // g_renderTarget[DispatchRaysIndex().xy] = float4(pos,1);
 
 }
 
@@ -426,7 +459,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
         if (rayPayload.prev_specular) {
             //store photon
             float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-            Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction};
+            Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
             StorePhoton(p);
         }
         //rayPayload.position = hitPosition;
@@ -507,7 +540,7 @@ void MyClosestHitShader_AABB_Photon(inout PhotonRayPayload rayPayload, in Proced
         if (rayPayload.prev_specular) {
             //store photon
             float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-            Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction};
+            Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
             StorePhoton(p);
         }
 

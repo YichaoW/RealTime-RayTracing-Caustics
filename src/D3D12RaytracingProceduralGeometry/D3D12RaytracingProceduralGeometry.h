@@ -47,7 +47,7 @@ private:
     //Photon Mapping
     static const UINT NUM_GBUFFERS = 4;
     static const UINT NUM_RENDERTARGETS = 1;
-    static const UINT NUM_PHOTONS = 1 << 12;
+    static const UINT NUM_PHOTONS = 1 << 22;
     static const UINT PHOTONMAP_WIDTH = 1024;
     static const UINT PHOTONMAP_HEIGHT = NUM_PHOTONS / PHOTONMAP_WIDTH;
     

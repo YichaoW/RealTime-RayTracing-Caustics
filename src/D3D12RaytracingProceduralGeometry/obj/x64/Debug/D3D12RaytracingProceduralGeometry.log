@@ -1,9 +1,9 @@
-﻿Raytracing.hlsl(257,57): warning GBFFABD58: implicit truncation of vector type
-      float4 causticsColor = computeCaustics(hitPosition, phongColor);
-                                                          ^
-Raytracing.hlsl(342,60): warning GBFFABD58: implicit truncation of vector type
-          float4 causticColor = computeCaustics(hitPosition, phongColor);
-                                                             ^
+﻿Photontracing.hlsl(462,38): warning GBFFABD58: implicit truncation of vector type
+              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
+                                       ^
+Photontracing.hlsl(543,38): warning GBFFABD58: implicit truncation of vector type
+              Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
+                                       ^
 FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
   
   D3D12RaytracingProceduralGeometry.cpp
