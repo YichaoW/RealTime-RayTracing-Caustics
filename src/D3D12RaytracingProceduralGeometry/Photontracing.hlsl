@@ -60,9 +60,9 @@ void StorePhoton(Photon p) {
     }
     else {
         float3 oldV;
-        // InterlockedAdd(g_photons[photonIndex].throughput.x, p.throughput.x, oldV.x);
-        // InterlockedAdd(g_photons[photonIndex].throughput.y, p.throughput.y, oldV.y);
-        // InterlockedAdd(g_photons[photonIndex].throughput.z, p.throughput.z, oldV.z);
+        InterlockedAdd(g_photons[photonIndex].throughput.x, p.throughput.x, oldV.x);
+        InterlockedAdd(g_photons[photonIndex].throughput.y, p.throughput.y, oldV.y);
+        InterlockedAdd(g_photons[photonIndex].throughput.z, p.throughput.z, oldV.z);
         InterlockedAdd(g_photons[photonIndex].count, 1, oldV.z);
 
     }
@@ -460,6 +460,8 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
             //store photon
             float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
             Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
+            Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), 0};
+
             StorePhoton(p);
         }
         //rayPayload.position = hitPosition;

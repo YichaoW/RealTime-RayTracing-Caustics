@@ -187,7 +187,7 @@ uint hashSpatial(int3 p, int hashSize) {
                           (p.z * 83492791)) %
            hashSize;
 }
-int GetPhotonSpatialIndex(in float3 pos) {
+uint GetPhotonSpatialIndex(in float3 pos) {
     // int minBound = -100;
     // int maxBound = 100;
     // int cellSize = 1<<12;
@@ -204,11 +204,13 @@ int GetPhotonSpatialIndex(in float3 pos) {
         return -1;
     }
 
-    float cellSize = 0.5f;
-    int width = (maxBound - minBound) / cellSize;
-    pos = (floor(pos - minBound/ cellSize));
+    //float2 pos = TexCoords(pos1);
+
+    float cellSize = 0.05f;
+    float width = (maxBound - minBound) / cellSize;
+    pos = floor((pos - minBound)/ cellSize);
     //return hashSpatial(pos, 1<<22);
-    return pos.x + pos.y * width + pos.z * width *width;
+    return pos.x + pos.z * width + pos.y * width *width;
 
     // float3 GridSize = float3(100,100,100);
     // float cellSize = 1;

@@ -59,8 +59,8 @@ typedef UINT16 Index;
 
 struct Photon {
     XMFLOAT3 throughput;
-    XMFLOAT3 position;
-    XMFLOAT3 wi;
+    //XMFLOAT3 position;
+    //XMFLOAT3 wi;
     UINT count;
 };
 
