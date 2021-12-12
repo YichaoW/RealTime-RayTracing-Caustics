@@ -1149,10 +1149,10 @@ void D3D12RaytracingProceduralGeometry::BuildGeometry()
     
     BuildProceduralGeometryAABBs();
     BuildPlaneGeometry();
-    //LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -4.0f});
+    LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -2.1f});
 
     //LoadModel("../../obj/glass.obj", { 0.3f, 0.3f, 0.3f }, { -4.0f, 1.7f, -4.0f });
-    LoadModel("../../obj/plate.obj", { 0.05f, 0.05f, 0.05f }, { -4.0f, 1.7f, -4.0f });
+    //LoadModel("../../obj/plate.obj", { 0.05f, 0.05f, 0.05f }, { -4.0f, 1.7f, -4.0f });
 
     CreateVertexIndexBuffers();
 
