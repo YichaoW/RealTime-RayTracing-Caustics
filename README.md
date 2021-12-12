@@ -44,7 +44,7 @@ Caustics photon map is slightly different from traditional photon map. For caust
 
 | Refraction Sphere| Refraction Sphere with caustics |
 |----|----|
-| ![](img/sphereRefract.PNG) | ![](img/naive1.PNG)|
+| ![](img/sphereRefract.PNG) | ![](img/sphereNaive.PNG)|
 
 ## Naive Search
 
