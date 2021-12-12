@@ -38,7 +38,7 @@ DirectX RayTracing (DXR) is a feature introduced in Microsoft's DirectX 12 API t
 
 Photon mapping realistically simulates the interaction of light with different types of objects. We emit photons from the light and record its intersection and throughput to build the photon map. Then we use the normal ray tracing to accumulate photons near the hit position.
 
-## Caustics
+## Photon Caustics
 
 Caustics photon map is slightly different from traditional photon map. For caustics, we only store photons that hit a diffuse object and its previous hit is a specular object. After that, we compute the caustics through ray tracing.
 
