@@ -50,18 +50,24 @@ typedef UINT16 Index;
 // PERFORMANCE TIP: Set max recursion depth as low as needed
 // as drivers may apply optimization strategies for low recursion depths.
 #define MAX_RAY_RECURSION_DEPTH 7    // ~ primary rays + reflections + shadow rays from reflected geometry.
+
+// photon map
 #define PHOTON_SEARCH_RADIUS 0.7f // for Naive photon search
+#define PHOTON_NUM 1<<24
+#define PHOTON_HALF_STEP 2 // step for gaussian blur
+#define PHOTON_TOTAL_STEP (PHOTON_HALF_STEP * 2 + 1) * (PHOTON_HALF_STEP * 2 + 1) * (PHOTON_HALF_STEP * 2 + 1)
+// for photon map spatial hashing
+#define PHOTON_CELL_SIZE 0.05f
+#define PHOTON_MAX_BOUND 10.f
+#define PHOTON_MIN_BOUND -10.f
+#define PHOTON_GRID_WIDTH (PHOTON_MAX_BOUND-PHOTON_MIN_BOUND)/PHOTON_CELL_SIZE
 
 #define PI 3.1415926535897932384626422832795028841971f
 #define INV_PI 0.318309886f
 #define TWO_PI 6.2831853071795864769252867665590057683943f
 #define SQRT_OF_ONE_THIRD 0.5773502691896257645091487805019574556476f
 
-// for photon map spatial hashing
-#define PHOTON_CELL_SIZE 0.02f
-#define PHOTON_MAX_BOUND 10f
-#define PHOTON_MIN_BOUND -10f
-#define PHOTON_GRID_WIDTH (PHOTON_MAX_BOUND-PHOTON_MIN_BOUND)/PHOTON_CELL_SIZE
+
 
 struct Photon {
     XMFLOAT3 throughput;

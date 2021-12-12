@@ -31,5 +31,6 @@
 *.app
 
 .vs/
+.vscode/
 src/D3D12RaytracingProceduralGeometry/bin/
 src/D3D12RaytracingProceduralGeometry/obj/

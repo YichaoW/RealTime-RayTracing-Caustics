@@ -60,9 +60,9 @@ void StorePhoton(Photon p) {
     }
     else {
         float3 oldV;
-        InterlockedAdd(g_photons[photonIndex].throughput.x, p.throughput.x, oldV.x);
-        InterlockedAdd(g_photons[photonIndex].throughput.y, p.throughput.y, oldV.y);
-        InterlockedAdd(g_photons[photonIndex].throughput.z, p.throughput.z, oldV.z);
+        // InterlockedAdd(g_photons[photonIndex].throughput.x, p.throughput.x, oldV.x);
+        // InterlockedAdd(g_photons[photonIndex].throughput.y, p.throughput.y, oldV.y);
+        // InterlockedAdd(g_photons[photonIndex].throughput.z, p.throughput.z, oldV.z);
         InterlockedAdd(g_photons[photonIndex].count, 1, oldV.z);
 
     }

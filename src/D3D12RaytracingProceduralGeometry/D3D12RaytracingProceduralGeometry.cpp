@@ -859,7 +859,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers()
     auto device = m_deviceResources->GetD3DDevice();
 
     D3D12_RESOURCE_ALLOCATION_INFO resDesc = {};
-    resDesc.SizeInBytes = NUM_PHOTONS * sizeof(Photon);
+    resDesc.SizeInBytes = 4 * NUM_PHOTONS * sizeof(Photon);
     resDesc.Alignment = 0;
     auto uavDesc = CD3DX12_RESOURCE_DESC::Buffer(resDesc, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -873,7 +873,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers()
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
     UAVDesc.Buffer.FirstElement = 0;
-    UAVDesc.Buffer.NumElements = NUM_PHOTONS;
+    UAVDesc.Buffer.NumElements = 4 * NUM_PHOTONS;
     UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
     UAVDesc.Buffer.CounterOffsetInBytes = 0;
     UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;

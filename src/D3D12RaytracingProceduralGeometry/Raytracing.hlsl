@@ -70,53 +70,53 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
     }
     return float4(0, 0, 0, 1);
 }
-
-static float kernel[121] = { 0.006849,0.007239,0.007559,0.007795,0.007941,0.00799,0.007941,0.007795,0.007559,0.007239,0.006849,
-                                     0.007239,0.007653,0.00799,0.00824,0.008394,0.008446,0.008394,0.00824,0.00799,0.007653,0.007239,
-                                     0.007559,0.00799,0.008342,0.008604,0.008764,0.008819,0.008764,0.008604,0.008342,0.00799,0.007559,
-                                     0.007795,0.00824,0.008604,0.008873,0.009039,0.009095,0.009039,0.008873,0.008604,0.00824,0.007795,
-                                     0.007941,0.008394,0.008764,0.009039,0.009208,0.009265,0.009208,0.009039,0.008764,0.008394,0.007941,
-                                     0.00799,0.008446,0.008819,0.009095,0.009265,0.009322,0.009265,0.009095,0.008819,0.008446,0.00799,
-                                     0.007941,0.008394,0.008764,0.009039,0.009208,0.009265,0.009208,0.009039,0.008764,0.008394,0.007941,
-                                     0.007795,0.00824,0.008604,0.008873,0.009039,0.009095,0.009039,0.008873,0.008604,0.00824,0.007795,
-                                     0.007559,0.00799,0.008342,0.008604,0.008764,0.008819,0.008764,0.008604,0.008342,0.00799,0.007559,
-                                     0.007239,0.007653,0.00799,0.00824,0.008394,0.008446,0.008394,0.00824,0.00799,0.007653,0.007239,
-                                     0.006849,0.007239,0.007559,0.007795,0.007941,0.00799,0.007941,0.007795,0.007559,0.007239,0.006849 };
                                      
 float4 computeCaustics(in float3 hitPosition, in float3 f) {
     float3 color = (0,0,0);
-    float r = 0.02f;
-    int count = 0;
-        float maxDist = 0;
-    float test[121];
+    int index = -1;
+
+    float weights[PHOTON_TOTAL_STEP];
+    float3 colors[PHOTON_TOTAL_STEP];
+
     float totalDist = 0; 
-    for (int i = -5; i < 5; i ++) {
-       // for (int j = -1; j < 1; j ++) {
-            for (int k = -5; k < 5; k ++) {
+    uint3 hitCoord = GetPhotonSpatialCoord(hitPosition);
+    for (float i = -PHOTON_HALF_STEP; i <= PHOTON_HALF_STEP; i ++) {
+        for (int j = -PHOTON_HALF_STEP; j <= PHOTON_HALF_STEP; j ++) {
+            for (float k = -PHOTON_HALF_STEP; k <= PHOTON_HALF_STEP; k ++) {
+                index++;
+
                 float3 pos = hitPosition;
-                pos.x += i * r;
-             //   pos.y += j * r;
-                pos.z += k * r;
-                int photonIndex = GetPhotonSpatialIndex(pos);
-                if (photonIndex == -1) {
+                pos.x += i * PHOTON_CELL_SIZE;
+                pos.y += j * PHOTON_CELL_SIZE;
+                pos.z += k * PHOTON_CELL_SIZE;
+                int3 neighborCoord = GetPhotonSpatialCoord(pos);
+                float dist = distance(hitCoord, neighborCoord);
+                totalDist += dist;
+
+                if (neighborCoord.x == -1) {
+                    weights[index] = 0.f;
+                    colors[index] = float3(0,0,0);
                     continue;
                 }
+
+
+                int photonIndex = GetPhotonSpatialIndex(pos);
                 Photon p = g_photons[photonIndex];
-                float dist = distance(p.position, hitPosition);
-                maxDist = max(dist, maxDist);
-                // if (p.count > 0) {
-                //    return float4(1,0,0,1);
-                // }
-                test[count] = dist;
-                totalDist += dist;
-                color += p.throughput * p.count * kernel[k + i * 11];
-                count++;
+
+                weights[index] = dist;
+                colors[index] = p.throughput * f * p.count;
             }
-      //  }
+        }
     }
 
-    if (count != 0) {
-        return float4(color, 1);
+    
+
+    if (totalDist != 0) {
+        float3 temp = {0,0,0};
+        for (int i = 0; i < PHOTON_TOTAL_STEP; i++) {
+            temp += weights[i] / totalDist * colors[i];
+        }   
+        return float4(temp, 1);
     }
     return float4(0, 0, 0, 1);
 

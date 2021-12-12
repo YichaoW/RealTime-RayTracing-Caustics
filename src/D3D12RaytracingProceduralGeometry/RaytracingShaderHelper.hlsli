@@ -187,21 +187,27 @@ uint hashSpatial(int3 p, int hashSize) {
                           (p.z * 83492791)) %
            hashSize;
 }
+
+int3 GetPhotonSpatialCoord(in float3 pos) {
+    if (min(pos.x, min(pos.y, pos.z)) < PHOTON_MIN_BOUND || max(pos.x, max(pos.y, pos.z)) > PHOTON_MAX_BOUND) {
+        return int3(-1,-1,-1);
+    }
+    return floor((pos - PHOTON_MIN_BOUND) / PHOTON_CELL_SIZE);
+}
+
 uint GetPhotonSpatialIndex(in float3 pos) {
-    int minBound = -10;
-    int maxBound = 10;
-    if (min(pos.x, min(pos.y, pos.z)) < minBound || max(pos.x, max(pos.y, pos.z)) > maxBound) {
+
+    if (min(pos.x, min(pos.y, pos.z)) < PHOTON_MIN_BOUND || max(pos.x, max(pos.y, pos.z)) > PHOTON_MAX_BOUND) {
         return -1;
     }
 
     //float2 pos = TexCoords(pos1);
 
-    float cellSize = PHOTON_CELL_SIZE;
-    float width = (maxBound - minBound) / cellSize;
-    float2 pos1 = TexCoords(pos);
-    pos1 = floor((pos1 - minBound)/ cellSize);
-    //return hashSpatial(pos, 1<<22);
-    return pos1.x + pos1.y * width;// + pos.z * width *width;
+
+    //float2 pos1 = TexCoords(pos);
+    pos = floor((pos - PHOTON_MIN_BOUND)/ PHOTON_CELL_SIZE);
+    return hashSpatial(pos, 4 * PHOTON_NUM);
+   // return pos1.x + pos1.y * PHOTON_GRID_WIDTH;// + pos.z * width *width;
 }
 
 #endif // RAYTRACINGSHADERHELPER_H
