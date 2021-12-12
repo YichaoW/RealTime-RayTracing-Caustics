@@ -1,26 +1,20 @@
-﻿Photontracing.hlsl(51,47): error G1A4676F8: no member named 'position' in 'Photon'
-      int photonIndex = GetPhotonSpatialIndex(p.position);
-                                              ~ ^
-Photontracing.hlsl(462,38): warning GBFFABD58: implicit truncation of vector type
-              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-                                       ^
-Photontracing.hlsl(462,24): error GE0BD9442: too many elements in vector initialization (expected 4 elements, have 10)
-              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-                         ^
-Photontracing.hlsl(463,20): error GBBEA2599: redefinition of 'p'
-              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), 0};
-                     ^
-  Photontracing.hlsl:462:20: note: previous definition is here
-              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-                     ^
-Photontracing.hlsl(463,38): warning GBFFABD58: implicit truncation of vector type
-              Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), 0};
-                                       ^
-Photontracing.hlsl(545,38): warning GBFFABD58: implicit truncation of vector type
-              Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-                                       ^
-Photontracing.hlsl(545,24): error GE0BD9442: too many elements in vector initialization (expected 4 elements, have 10)
-              Photon p = {throughput * phongColor * abs(dot(attr.normal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-                         ^
-FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
-  
+﻿  D3D12RaytracingProceduralGeometry.cpp
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(120,44): warning C4474: 'printf' : too many arguments passed for format string
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(120,44): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(147,88): warning C4244: 'argument': conversion from 'tinyobj::real_t' to 'const unsigned __int64', possible loss of data
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(149,88): warning C4244: 'argument': conversion from 'tinyobj::real_t' to 'const unsigned __int64', possible loss of data
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(151,88): warning C4244: 'argument': conversion from 'tinyobj::real_t' to 'const unsigned __int64', possible loss of data
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(171,65): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=Index
+          ]
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(178,51): warning C4474: 'printf' : too many arguments passed for format string
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(178,51): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(179,49): warning C4474: 'printf' : too many arguments passed for format string
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(179,49): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(255,74): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(950,73): warning C4305: 'argument': truncation from 'double' to 'float'
+  Main.cpp
+  Generating Code...
+  D3D12RaytracingProceduralGeometry.vcxproj -> C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\bin\x64\Debug\D3D12RaytracingProceduralGeometry.exe

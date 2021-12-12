@@ -188,16 +188,6 @@ uint hashSpatial(int3 p, int hashSize) {
            hashSize;
 }
 uint GetPhotonSpatialIndex(in float3 pos) {
-    // int minBound = -100;
-    // int maxBound = 100;
-    // int cellSize = 1<<12;
-    // int width = (maxBound - minBound) / cellSize;
-    // int x = pos.x;
-    // int y = pos.y;
-    // int z = pos.z;
-    // int sum = uint((x * 73856093) ^ (y * 19349663) ^ (z * 83492791));
-    // int index = int(sum % uint(cellSize));
-    // return index;//
     int minBound = -10;
     int maxBound = 10;
     if (min(pos.x, min(pos.y, pos.z)) < minBound || max(pos.x, max(pos.y, pos.z)) > maxBound) {
@@ -206,24 +196,12 @@ uint GetPhotonSpatialIndex(in float3 pos) {
 
     //float2 pos = TexCoords(pos1);
 
-    float cellSize = 0.05f;
+    float cellSize = PHOTON_CELL_SIZE;
     float width = (maxBound - minBound) / cellSize;
-    pos = floor((pos - minBound)/ cellSize);
+    float2 pos1 = TexCoords(pos);
+    pos1 = floor((pos1 - minBound)/ cellSize);
     //return hashSpatial(pos, 1<<22);
-    return pos.x + pos.z * width + pos.y * width *width;
-
-    // float3 GridSize = float3(100,100,100);
-    // float cellSize = 1;
-    // float3 normPosition = pos;
-    // float R = 0.2f;
-    // float xMin = max(0, floor((normPosition.x - R)/cellSize));
-    // float xMax = min(GridSize.x-1, floor((normPosition.x + R)/cellSize));
-    // float yMin = max(0, floor((normPosition.y - R)/cellSize));
-    // float yMax = min(GridSize.y-1, floor((normPosition.y + R)/cellSize));
-    // float zMin = max(0, floor((normPosition.z - R)/cellSize));
-    // float zMax = min(GridSize.z-1, floor((normPosition.z + R)/cellSize));
-
-    // return  x + y*gridSize.x + z*gridSize.x*gridSize.y;
+    return pos1.x + pos1.y * width;// + pos.z * width *width;
 }
 
 #endif // RAYTRACINGSHADERHELPER_H

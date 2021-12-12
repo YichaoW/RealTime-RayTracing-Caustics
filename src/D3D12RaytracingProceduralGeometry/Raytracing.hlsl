@@ -71,51 +71,66 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
     return float4(0, 0, 0, 1);
 }
 
+static float kernel[121] = { 0.006849,0.007239,0.007559,0.007795,0.007941,0.00799,0.007941,0.007795,0.007559,0.007239,0.006849,
+                                     0.007239,0.007653,0.00799,0.00824,0.008394,0.008446,0.008394,0.00824,0.00799,0.007653,0.007239,
+                                     0.007559,0.00799,0.008342,0.008604,0.008764,0.008819,0.008764,0.008604,0.008342,0.00799,0.007559,
+                                     0.007795,0.00824,0.008604,0.008873,0.009039,0.009095,0.009039,0.008873,0.008604,0.00824,0.007795,
+                                     0.007941,0.008394,0.008764,0.009039,0.009208,0.009265,0.009208,0.009039,0.008764,0.008394,0.007941,
+                                     0.00799,0.008446,0.008819,0.009095,0.009265,0.009322,0.009265,0.009095,0.008819,0.008446,0.00799,
+                                     0.007941,0.008394,0.008764,0.009039,0.009208,0.009265,0.009208,0.009039,0.008764,0.008394,0.007941,
+                                     0.007795,0.00824,0.008604,0.008873,0.009039,0.009095,0.009039,0.008873,0.008604,0.00824,0.007795,
+                                     0.007559,0.00799,0.008342,0.008604,0.008764,0.008819,0.008764,0.008604,0.008342,0.00799,0.007559,
+                                     0.007239,0.007653,0.00799,0.00824,0.008394,0.008446,0.008394,0.00824,0.00799,0.007653,0.007239,
+                                     0.006849,0.007239,0.007559,0.007795,0.007941,0.00799,0.007941,0.007795,0.007559,0.007239,0.006849 };
+                                     
 float4 computeCaustics(in float3 hitPosition, in float3 f) {
-    // float3 color = (0,0,0);
-    // float r = 0.2f;
-    // int count = 0;
-    //     float maxDist = 0;
-
-    // for (int i = -1; i < 1; i ++) {
-    //     for (int j = -1; j < 1; j ++) {
-    //         for (int k = -1; k < 1; k ++) {
-    //             float3 pos = hitPosition;
-    //             pos.x += i;
-    //             pos.y += j;
-    //             pos.z += k;
-    //             int photonIndex = GetPhotonSpatialIndex(pos);
-    //             if (photonIndex == -1) {
-    //                 continue;
-    //             }
-    //             Photon p = g_photons[photonIndex];
-    //             float dist = distance(p.position, hitPosition);
-    //              maxDist = max(dist, maxDist);
-    //             // if (p.count > 0) {
-    //             //    return float4(1,0,0,1);
-    //             // }
-    //             color += p.throughput * f;
-    //             count++;
-    //         }
-    //     }
-    // }
-
-    // if (count != 0) {
-    //     return float4(color / count  / PI / maxDist, 1);
-    // }
-    // return float4(0, 0, 0, 1);
-
-     float3 pos = hitPosition;
+    float3 color = (0,0,0);
+    float r = 0.02f;
+    int count = 0;
+        float maxDist = 0;
+    float test[121];
+    float totalDist = 0; 
+    for (int i = -5; i < 5; i ++) {
+       // for (int j = -1; j < 1; j ++) {
+            for (int k = -5; k < 5; k ++) {
+                float3 pos = hitPosition;
+                pos.x += i * r;
+             //   pos.y += j * r;
+                pos.z += k * r;
                 int photonIndex = GetPhotonSpatialIndex(pos);
                 if (photonIndex == -1) {
-                    return float4(0, 0, 0, 1);
+                    continue;
                 }
                 Photon p = g_photons[photonIndex];
-                float4 color = float4(p.throughput * f * p.count, 1);
-                if (p.count > 0) {
-                    return color;// float4(1, 0, 0, 1);
-                }
+                float dist = distance(p.position, hitPosition);
+                maxDist = max(dist, maxDist);
+                // if (p.count > 0) {
+                //    return float4(1,0,0,1);
+                // }
+                test[count] = dist;
+                totalDist += dist;
+                color += p.throughput * p.count * kernel[k + i * 11];
+                count++;
+            }
+      //  }
+    }
+
+    if (count != 0) {
+        return float4(color, 1);
+    }
     return float4(0, 0, 0, 1);
+
+    //  float3 pos = hitPosition;
+    //             int photonIndex = GetPhotonSpatialIndex(pos);
+    //             if (photonIndex == -1) {
+    //                 return float4(0, 0, 0, 1);
+    //             }
+    //             Photon p = g_photons[photonIndex];
+    //             float4 color = float4(p.throughput * f * p.count, 1);
+    //             if (p.count > 0) {
+    //                 return color;// float4(1, 0, 0, 1);
+    //             }
+    // return float4(0, 0, 0, 1);
 
 }
 

@@ -460,7 +460,6 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
             //store photon
             float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
             Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
-            Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), 0};
 
             StorePhoton(p);
         }

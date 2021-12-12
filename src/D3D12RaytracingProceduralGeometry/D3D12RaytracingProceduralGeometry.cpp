@@ -873,7 +873,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonGBuffers()
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
     UAVDesc.Buffer.FirstElement = 0;
-    UAVDesc.Buffer.NumElements = 1<<22;
+    UAVDesc.Buffer.NumElements = NUM_PHOTONS;
     UAVDesc.Buffer.StructureByteStride = sizeof(Photon);
     UAVDesc.Buffer.CounterOffsetInBytes = 0;
     UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
