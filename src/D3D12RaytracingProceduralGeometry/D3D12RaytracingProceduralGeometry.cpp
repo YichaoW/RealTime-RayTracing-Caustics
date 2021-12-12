@@ -13,6 +13,7 @@
 #include "D3D12RaytracingProceduralGeometry.h"
 #include "CompiledShaders\Raytracing.hlsl.h"
 #include "CompiledShaders\Photontracing.hlsl.h"
+#include "atlstr.h"
 
 #include <iostream>
 
@@ -93,91 +94,7 @@ D3D12RaytracingProceduralGeometry::D3D12RaytracingProceduralGeometry(UINT width,
 }
 
 
-void D3D12RaytracingProceduralGeometry::LoadModel()
-{
-    TCHAR buffer[MAX_PATH] = { 0 };
-    GetModuleFileName(NULL, buffer, MAX_PATH);
-    std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
-    std::wstring tmp = std::wstring(buffer).substr(0, pos);
-    std::string filepath("test.obj");
 
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./";
-    reader_config.triangulate = true;
-
-    tinyobj::ObjReader reader;
-    if (!reader.ParseFromFile(filepath.c_str(), reader_config))
-    {
-        if (!reader.Error().empty())
-        {
-            std::cout << "[Scene] failed to load " << filepath <<  " : " << reader.Error() << "\n";
-        }
-        return;
-    }
-
-    if (!reader.Warning().empty())
-    {
-        printf("[Scene] {}", reader.Warning());
-    }
-
-    const auto &attrib = reader.GetAttrib();
-    const auto &shapes = reader.GetShapes();
-    const auto &materials = reader.GetMaterials();
-
-    // loop over shapes
-    for (size_t s = 0; s < shapes.size(); ++s)
-    {
-        size_t index_offset = 0;
-        // loop over faces
-        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); ++f)
-        {
-            const size_t fv =
-                static_cast<size_t>(shapes[s].mesh.num_face_vertices[f]);
-
-            std::vector<Vertex> vertices;
-            bool hasNormal = false;
-            // loop over vertices
-            // get vertices, normals
-            for (size_t v = 0; v < fv; ++v)
-            {
-                Vertex vert;
-                const tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-
-                const tinyobj::real_t vx =
-                    attrib.vertices[3 * static_cast<tinyobj::real_t>(idx.vertex_index) + 0];
-                const tinyobj::real_t vy =
-                    attrib.vertices[3 * static_cast<tinyobj::real_t>(idx.vertex_index) + 1];
-                const tinyobj::real_t vz =
-                    attrib.vertices[3 * static_cast<tinyobj::real_t>(idx.vertex_index) + 2];
-                vert.position = { vx, vy, vz };
-
-                if (idx.normal_index >= 0)
-                {
-                    hasNormal = true;
-                    const tinyobj::real_t nx =
-                        attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 0];
-                    const tinyobj::real_t ny =
-                        attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 1];
-                    const tinyobj::real_t nz =
-                        attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 2];
-                    vert.normal = {nx, ny, nz};
-                }
-            }
-
-            // populate vertices, indices, normals, texcoords
-            for (int i = 0; i < 3; ++i)
-            {
-                this->m_vertices.push_back(vertices[i]);
-                this->m_indices.push_back(this->m_indices.size());
-            }
-
-            index_offset += fv;
-        }
-    }
-    std::cout << m_vertices.size() << "\n";
-    printf("[Scene] vertices: {}", m_vertices.size());
-    printf("[Scene] indices: {}", m_indices.size());
-}
 
 void D3D12RaytracingProceduralGeometry::OnInit()
 {
@@ -283,7 +200,6 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
 {
     auto frameIndex = m_deviceResources->GetCurrentFrameIndex();
 
-    LoadModel();
     // Setup materials.
     {
         auto SetAttributes = [&](
@@ -313,6 +229,14 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
                              0,
                              1,
                              0.0f};
+
+        m_glassMaterialCB = { XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f),
+                             1.0f,
+                             0.9f,
+                             0.7f,
+                             1.0,
+                             50.0,
+                             1.0f };
         //
         // Albedos
         XMFLOAT4 green = XMFLOAT4(0.1f, 1.0f, 0.5f, 1.0f);
@@ -467,6 +391,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0); // 1 output texture
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1); // 2 static index and vertex buffers.
 
+
         CD3DX12_ROOT_PARAMETER rootParameters[GlobalRootSignature::Slot::Count];
         rootParameters[GlobalRootSignature::Slot::OutputView].InitAsDescriptorTable(1, &ranges[0]);
         rootParameters[GlobalRootSignature::Slot::AccelerationStructure].InitAsShaderResourceView(0);
@@ -485,6 +410,7 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
             namespace RootSignatureSlots = LocalRootSignature::Triangle::Slot;
             CD3DX12_ROOT_PARAMETER rootParameters[RootSignatureSlots::Count];
             rootParameters[RootSignatureSlots::MaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 1);
+            rootParameters[RootSignatureSlots::GlassMaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 3);
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -534,6 +460,7 @@ void D3D12RaytracingProceduralGeometry::CreatePhotonRootSignatures()
             namespace RootSignatureSlots = LocalRootSignature::Triangle::Slot;
             CD3DX12_ROOT_PARAMETER rootParameters[RootSignatureSlots::Count];
             rootParameters[RootSignatureSlots::MaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 1);
+            rootParameters[RootSignatureSlots::GlassMaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 3);
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -945,9 +872,9 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0.1, 1), XMFLOAT3(2, 3, 2));
             // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
-            m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
+            //m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
             offset += AnalyticPrimitive::Count;
         }
 
@@ -977,40 +904,230 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
 {
     auto device = m_deviceResources->GetD3DDevice();
     // Plane indices.
-    Index indices[] =
+    /*Index indices[] =
         {
-            3,
-            1,
+            3,1,
             0,
             2,
             1,
             3,
 
-        };
+        };*/
+
+    Index indices[] =
+    {
+        0,1,2,3,4,5,
+
+    };
+
+    for (int i = 0; i <= 5; i++) {
+        
+        m_indices.push_back(i);
+    }
+
 
     // Cube vertices positions and corresponding triangle normals.
-    Vertex vertices[] =
+    /*Vertex vertices[] =
         {
-            {XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-            {XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-            {XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-            {XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-        };
+            {XMFLOAT3(0.0f, -0.1f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+            {XMFLOAT3(2798.0f, -0.1f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+            {XMFLOAT3(2798.0f, -0.1f, 2798.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+            {XMFLOAT3(0.0f, -0.1f, 2798.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        };*/
 
-    AllocateUploadBuffer(device, indices, sizeof(indices), &m_indexBuffer.resource);
-    AllocateUploadBuffer(device, vertices, sizeof(vertices), &m_vertexBuffer.resource);
+    Vertex vertices[] =
+    {
+        {XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        {XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        {XMFLOAT3(-1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        {XMFLOAT3(1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        {XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+        {XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+    };
+
+    Vertex v0 = { XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+    Vertex v1 = { XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+    Vertex v2 = { XMFLOAT3(-1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+    Vertex v3 = { XMFLOAT3(1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+    Vertex v4 = { XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+    Vertex v5 = { XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
+
+
+    m_vertices.push_back(v0);
+    m_vertices.push_back(v1);
+    m_vertices.push_back(v2);
+    m_vertices.push_back(v3);
+    m_vertices.push_back(v4);
+    m_vertices.push_back(v5);
+
+
+    /*std::wstringstream wstr;
+    wstr << L"sizeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n";
+    wstr << m_indices.size() * sizeof(m_indices[0])<< L"\n";
+    wstr << sizeof(indices) << L"\n";
+    wstr << m_vertices.size() * sizeof(m_vertices[0]) << L"\n";
+    wstr << sizeof(vertices) << L"\n";
+
+
+    wstr << m_indices.size() / 2<< L"\n";
+    wstr << sizeof(indices) / 4 << L"\n";
+    wstr << m_vertices.size() << L"\n";
+    wstr << ARRAYSIZE(vertices) << L"\n";
+    OutputDebugStringW(wstr.str().c_str());*/
+
+
+    //AllocateUploadBuffer(device, m_indices.data(), m_indices.size() * sizeof(m_indices[0]), &m_indexBuffer.resource);
+    //AllocateUploadBuffer(device, m_vertices.data(), m_vertices.size() * sizeof(m_vertices[0]), &m_vertexBuffer.resource);
+
+    //// Vertex buffer is passed to the shader along with index buffer as a descriptor range.
+    //UINT descriptorIndexIB = CreateBufferSRV(&m_indexBuffer, m_indices.size() / 2 , 0);
+    //UINT descriptorIndexVB = CreateBufferSRV(&m_vertexBuffer, m_vertices.size(), sizeof(m_vertices[0]));
+    //ThrowIfFalse(descriptorIndexVB == descriptorIndexIB + 1, L"Vertex Buffer descriptor index must follow that of Index Buffer descriptor index");
+}
+
+void D3D12RaytracingProceduralGeometry::LoadModel(std::string filepath, XMFLOAT3 scale, XMFLOAT3 translation)
+{
+
+    auto device = m_deviceResources->GetD3DDevice();
+
+    TCHAR pwd[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, pwd);
+    //MessageBox(NULL, pwd, pwd, 0);
+
+    //m_vertices = new 
+
+    std::wstringstream wstr;
+    wstr << L"haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
+
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+
+    std::string warn;
+    std::string err;
+    //std::string filepath("../../obj/teapot.obj");
+
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+        filepath.c_str());
+
+
+    if (!warn.empty()) {
+
+        wstr << L"WARN: " << warn.c_str() << L"\n";
+    }
+
+    if (!err.empty()) {
+
+        wstr << L"ERR: " << err.c_str() << L"\n";
+    }
+
+    if (!ret) {
+
+
+        wstr << L"Failed to load/parse .obj.\n";
+
+        OutputDebugStringW(wstr.str().c_str());
+        return;
+    }
+
+    bool test = false;
+    // loop over shapes
+    for (size_t s = 0; s < shapes.size(); ++s)
+    {
+        size_t index_offset = 0;
+        // loop over faces
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); ++f)
+        {
+            size_t fv = static_cast<size_t>(shapes[s].mesh.num_face_vertices[f]);
+
+            std::vector<Vertex> vertices;
+            bool hasNormal = false;
+            // loop over vertices
+            // get vertices, normals
+            for (size_t v = 0; v < fv; ++v)
+            {
+                Vertex vert;
+
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+                tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+                tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+                tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+
+                vert.position = { scale.x * vx + translation.x, scale.y * vy + translation.y, scale.z * vz + translation.z };
+
+                if (idx.normal_index >= 0)
+                {
+                    hasNormal = true;
+                    test = true;
+                    tinyobj::real_t nx = attrib.normals[3 * size_t(idx.normal_index) + 0];
+                    tinyobj::real_t ny = attrib.normals[3 * size_t(idx.normal_index) + 1];
+                    tinyobj::real_t nz = attrib.normals[3 * size_t(idx.normal_index) + 2];
+                    vert.normal = { nx, ny, nz };
+                }
+
+                vert.materialIdx = 1;
+                vertices.push_back(vert);
+            }
+
+            // populate vertices, indices, normals, texcoords
+            for (int i = 0; i < 3; ++i)
+            {
+                this->m_vertices.push_back(vertices[i]);
+                this->m_indices.push_back(this->m_indices.size());
+          
+            }
+
+            index_offset += fv;
+        }
+    }
+
+    //wstr << L"[Scene] vertices: {} " << m_vertices.size() << L"\n";
+    //wstr << L"[Scene] indices: {} " << m_indices.size() << L"\n";
+
+    //wstr << L"[Scene] vertices: {} " << shapes[0].mesh.indices.size() << L"\n";
+
+
+    //wstr << test << L"has normal " <<  L"\n";
+    OutputDebugStringW(wstr.str().c_str());
+}
+
+
+void D3D12RaytracingProceduralGeometry::CreateVertexIndexBuffers() {
+
+
+
+    auto device = m_deviceResources->GetD3DDevice();
+
+    std::wstringstream wstr;
+    wstr << L"sizeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n";
+    for (int i = 0; i < m_indices.size(); i++) {
+        wstr << m_indices[i] << L"\n";
+    }
+    
+    //wstr << sizeof(indices) << L"\n";
+    OutputDebugStringW(wstr.str().c_str());
+
+
+    AllocateUploadBuffer(device, m_indices.data(), m_indices.size() * sizeof(m_indices[0]), &m_indexBuffer.resource);
+    AllocateUploadBuffer(device, m_vertices.data(), m_vertices.size() * sizeof(m_vertices[0]), &m_vertexBuffer.resource);
 
     // Vertex buffer is passed to the shader along with index buffer as a descriptor range.
-    UINT descriptorIndexIB = CreateBufferSRV(&m_indexBuffer, sizeof(indices) / 4, 0);
-    UINT descriptorIndexVB = CreateBufferSRV(&m_vertexBuffer, ARRAYSIZE(vertices), sizeof(vertices[0]));
+    UINT descriptorIndexIB = CreateBufferSRV(&m_indexBuffer, m_indices.size() / 2, 0);
+    UINT descriptorIndexVB = CreateBufferSRV(&m_vertexBuffer, m_vertices.size(), sizeof(m_vertices[0]));
     ThrowIfFalse(descriptorIndexVB == descriptorIndexIB + 1, L"Vertex Buffer descriptor index must follow that of Index Buffer descriptor index");
+
 }
 
 // Build geometry used in the sample.
 void D3D12RaytracingProceduralGeometry::BuildGeometry()
 {
+    
     BuildProceduralGeometryAABBs();
     BuildPlaneGeometry();
+    LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -4.0f});
+    CreateVertexIndexBuffers();
+
 }
 
 // Build geometry descs for bottom-level AS.
@@ -1038,6 +1155,7 @@ void D3D12RaytracingProceduralGeometry::BuildGeometryDescsForBottomLevelAS(array
         geometryDesc.Triangles.VertexBuffer.StartAddress = m_vertexBuffer.resource->GetGPUVirtualAddress();
         geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
         geometryDesc.Flags = geometryFlags;
+
     }
 
     // AABB geometry desc
@@ -1139,10 +1257,15 @@ void D3D12RaytracingProceduralGeometry::BuildBotomLevelASInstanceDescs(BLASPtrTy
         instanceDesc.AccelerationStructure = bottomLevelASaddresses[BottomLevelASType::Triangle];
 
         // Calculate transformation matrix.
-        const XMVECTOR vBasePosition = vWidth * XMLoadFloat3(&XMFLOAT3(-0.35f, 0.0f, -0.35f));
+        const XMVECTOR vBasePosition =  XMLoadFloat3(&XMFLOAT3(-0.35f, 0.0f, -0.35f));
 
         // Scale in XZ dimensions.
-        XMMATRIX mScale = XMMatrixScaling(fWidth.x, fWidth.y, fWidth.z);
+        
+        std::wstringstream wstr;
+
+
+        OutputDebugStringW(wstr.str().c_str());
+        XMMATRIX mScale = XMMatrixScaling(1, 1, 1);
         XMMATRIX mTranslation = XMMatrixTranslationFromVector(vBasePosition);
         XMMATRIX mTransform = mScale * mTranslation;
         XMStoreFloat3x4(reinterpret_cast<XMFLOAT3X4 *>(instanceDesc.Transform), mTransform);
@@ -1378,6 +1501,7 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
         {
             LocalRootSignature::Triangle::RootArguments rootArgs;
             rootArgs.materialCb = m_planeMaterialCB;
+            rootArgs.glassMaterialCb = m_glassMaterialCB;
 
             for (auto &hitGroupShaderID : hitGroupShaderIDs_TriangleGeometry)
             {
@@ -1517,6 +1641,7 @@ void D3D12RaytracingProceduralGeometry::BuildPhotonShaderTables()
         {
             LocalRootSignature::Triangle::RootArguments rootArgs;
             rootArgs.materialCb = m_planeMaterialCB;
+            rootArgs.glassMaterialCb = m_glassMaterialCB;
 
             for (auto &hitGroupShaderID : hitGroupShaderIDs_TriangleGeometry)
             {

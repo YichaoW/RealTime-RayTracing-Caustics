@@ -147,6 +147,7 @@ struct Vertex
 {
     XMFLOAT3 position;
     XMFLOAT3 normal;
+    UINT materialIdx;
 };
 
 

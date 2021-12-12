@@ -27,6 +27,7 @@ StructuredBuffer<Vertex> g_vertices : register(t2, space0);
 StructuredBuffer<PrimitiveInstancePerFrameBuffer> g_AABBPrimitiveAttributes : register(t3, space0);
 ConstantBuffer<PrimitiveConstantBuffer> l_materialCB : register(b1);
 ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
+ConstantBuffer<PrimitiveConstantBuffer> l_glassMaterialCB : register(b3);
 
 // Photon Resource
 RWStructuredBuffer<Photon> g_photons: register(u1);
@@ -419,8 +420,34 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
 
     //newThroughput = throughput * 
 
+    int materialIdx = g_vertices[indices[0]].materialIdx;
+
+    float refractCoef;
+    float reflectanceCoef;
+    float4 albedo;
+    float diffuseCoef;
+    float specularCoef;
+    float specularPower;
+
+    if (materialIdx == 0) {
+        refractCoef = l_materialCB.refractCoef;
+        reflectanceCoef = l_materialCB.reflectanceCoef;
+        albedo = l_materialCB.albedo;
+        diffuseCoef = l_materialCB.diffuseCoef;
+        specularCoef = l_materialCB.specularCoef;
+        specularPower = l_materialCB.specularPower;
+
+    }
+    else {
+        refractCoef = l_glassMaterialCB.refractCoef;
+        reflectanceCoef = l_glassMaterialCB.reflectanceCoef;
+        albedo = l_glassMaterialCB.albedo;
+        diffuseCoef = l_glassMaterialCB.diffuseCoef;
+        specularCoef = l_glassMaterialCB.specularCoef;
+        specularPower = l_glassMaterialCB.specularPower;
+    }
   
-    if (l_materialCB.refractCoef > 0.001) {
+    if (refractCoef > 0.001) {
         float rayDotNormal = dot(WorldRayDirection(), triangleNormal);
         float temp = 1.5;
         if (rayDotNormal > 0.0) {
@@ -449,7 +476,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
 
         }
     }
-    else if (l_materialCB.reflectanceCoef > 0.001) // reflect
+    else if (reflectanceCoef > 0.001) // reflect
     {
         // Trace a reflection ray.
         Ray newRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
@@ -459,7 +486,7 @@ void MyClosestHitShader_Triangle_Photon(inout PhotonRayPayload rayPayload, in Bu
     else { //diffuse lambert
         if (rayPayload.prev_specular) {
             //store photon
-            float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
+            float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
             Photon p = {throughput * phongColor * abs(dot(triangleNormal, normalize(g_sceneCB.lightPosition.xyz - hitPosition))), hitPosition, -rayPayload.direction, 0};
 
             StorePhoton(p);
