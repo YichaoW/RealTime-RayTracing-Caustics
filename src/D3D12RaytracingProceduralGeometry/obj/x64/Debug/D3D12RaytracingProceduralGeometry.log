@@ -14,7 +14,6 @@ C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProcedura
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(179,49): warning C4474: 'printf' : too many arguments passed for format string
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(179,49): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(255,74): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(950,73): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(1581,58): warning C4305: 'initializing': truncation from 'double' to 'float'
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(1585,59): warning C4305: 'initializing': truncation from 'double' to 'float'
 C:\Users\franc\Desktop\RealTime-RayTracing-Caustics\src\D3D12RaytracingProceduralGeometry\D3D12RaytracingProceduralGeometry.cpp(1589,58): warning C4305: 'initializing': truncation from 'double' to 'float'
