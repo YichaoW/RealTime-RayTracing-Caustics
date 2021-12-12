@@ -872,7 +872,7 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0.1, 1), XMFLOAT3(2, 3, 2));
+            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0.1, 1), XMFLOAT3(2, 3, 2));
             // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
             //m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
             offset += AnalyticPrimitive::Count;
@@ -1066,8 +1066,32 @@ void D3D12RaytracingProceduralGeometry::LoadModel(std::string filepath, XMFLOAT3
                     vert.normal = { nx, ny, nz };
                 }
 
+                
                 vert.materialIdx = 1;
                 vertices.push_back(vert);
+            }
+
+            if (!hasNormal) {
+                const XMFLOAT3 v0float = vertices[0].position;
+                const XMFLOAT3 v1float = vertices[1].position;
+                const XMFLOAT3 v2float = vertices[2].position;
+
+
+                XMVECTOR v0 = XMLoadFloat3(&v0float);
+                XMVECTOR v1 = XMLoadFloat3(&v1float);
+                XMVECTOR v2 = XMLoadFloat3(&v2float);
+
+                XMVECTOR e0 = XMVector3Normalize(v1 - v0);
+                XMVECTOR e1 = XMVector3Normalize(v2 - v0);
+                XMVECTOR n = XMVector3Normalize(XMVector3Cross(e0, e1));
+
+                XMFLOAT3 nfloat;
+                XMStoreFloat3(&nfloat, n);
+                for (int i = 0; i < vertices.size(); i++) {
+                    vertices[i].normal = nfloat;
+                }
+
+
             }
 
             // populate vertices, indices, normals, texcoords
@@ -1125,7 +1149,11 @@ void D3D12RaytracingProceduralGeometry::BuildGeometry()
     
     BuildProceduralGeometryAABBs();
     BuildPlaneGeometry();
-    LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -4.0f});
+    //LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -4.0f});
+
+    //LoadModel("../../obj/glass.obj", { 0.3f, 0.3f, 0.3f }, { -4.0f, 1.7f, -4.0f });
+    LoadModel("../../obj/plate.obj", { 0.05f, 0.05f, 0.05f }, { -4.0f, 1.7f, -4.0f });
+
     CreateVertexIndexBuffers();
 
 }
