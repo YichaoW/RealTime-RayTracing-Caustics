@@ -945,9 +945,9 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
+            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0, 1), XMFLOAT3(2, 3, 2));
             // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
-            //m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
+            m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
             offset += AnalyticPrimitive::Count;
         }
 

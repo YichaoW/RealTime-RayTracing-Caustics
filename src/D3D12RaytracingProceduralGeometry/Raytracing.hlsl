@@ -40,6 +40,17 @@ ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
 
 RWStructuredBuffer<Photon> g_photons : register(u1);
 
+static float kernel[121] = { 0.006849, 0.007239, 0.007559, 0.007795, 0.007941, 0.00799, 0.007941, 0.007795, 0.007559, 0.007239, 0.006849,
+    0.007239, 0.007653, 0.00799, 0.00824, 0.008394, 0.008446, 0.008394, 0.00824, 0.00799, 0.007653, 0.007239,
+    0.007559, 0.00799, 0.008342, 0.008604, 0.008764, 0.008819, 0.008764, 0.008604, 0.008342, 0.00799, 0.007559,
+    0.007795, 0.00824, 0.008604, 0.008873, 0.009039, 0.009095, 0.009039, 0.008873, 0.008604, 0.00824, 0.007795,
+    0.007941, 0.008394, 0.008764, 0.009039, 0.009208, 0.009265, 0.009208, 0.009039, 0.008764, 0.008394, 0.007941,
+    0.00799, 0.008446, 0.008819, 0.009095, 0.009265, 0.009322, 0.009265, 0.009095, 0.008819, 0.008446, 0.00799,
+    0.007941, 0.008394, 0.008764, 0.009039, 0.009208, 0.009265, 0.009208, 0.009039, 0.008764, 0.008394, 0.007941,
+    0.007795, 0.00824, 0.008604, 0.008873, 0.009039, 0.009095, 0.009039, 0.008873, 0.008604, 0.00824, 0.007795,
+    0.007559, 0.00799, 0.008342, 0.008604, 0.008764, 0.008819, 0.008764, 0.008604, 0.008342, 0.00799, 0.007559,
+    0.007239, 0.007653, 0.00799, 0.00824, 0.008394, 0.008446, 0.008394, 0.00824, 0.00799, 0.007653, 0.007239,
+    0.006849, 0.007239, 0.007559, 0.007795, 0.007941, 0.00799, 0.007941, 0.007795, 0.007559, 0.007239, 0.006849 };
 
 //***************************************************************************
 //****************------ Utility functions -------***************************
@@ -51,7 +62,7 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
     float3 color = float3(0,0,0);
     float numPhoton = 0;
     float maxDist = 0;
-    float minDist = 0;
+    float totalDist = 0;
 
     // naive search 
     for (int i = 0; i < numStructs; i++) {
@@ -61,12 +72,13 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
         float dist = distance(g_photons[i].position, hitPosition);
         if (dist < PHOTON_SEARCH_RADIUS) {
             color += f * g_photons[i].throughput;
+            totalDist += dist;
             maxDist = max(dist, maxDist);
             numPhoton++;
         }
     }
     if (numPhoton != 0) {
-        return float4(color / numPhoton  / PI / maxDist, 1);
+        return float4(color / numPhoton / PI / maxDist , 1);
     }
     return float4(0, 0, 0, 1);
 }
@@ -74,6 +86,7 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
 float4 computeCaustics(in float3 hitPosition, in float3 f) {
     float3 color = (0,0,0);
     float totalDist = 0; 
+
     uint3 hitCoord = GetPhotonSpatialCoord(hitPosition);
     for (float i = -PHOTON_HALF_STEP; i <= PHOTON_HALF_STEP; i ++) {
         for (int j = -PHOTON_HALF_STEP; j <= PHOTON_HALF_STEP; j ++) {
@@ -96,7 +109,7 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
         }
     }
     if (totalDist != 0) {
-        return float4(color/totalDist, 1);
+        return float4(color / totalDist, 1);
     }
     return float4(0, 0, 0, 1);
 }
