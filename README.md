@@ -44,14 +44,14 @@ Caustics photon map is slightly different from traditional photon map. For caust
 
 | Refraction Sphere| Refraction Sphere with caustics |
 |----|----|
-| ![](img/sphereRefract.PNG) | ![](img/sphereSpatial.PNG)|
+| ![](img/sphereRefract.PNG) | ![](img/naive1.PNG)|
 
 ## Naive Search
 
 They are several algorithms to accumulate caustic photons near the hit position. The first one is the naive search which accumulates all the photons within a predefined search radius. This algorithm is easy to implement but it has several drawbacks. First of all, it produces an unnatural visual effect. As we can see from the below image, there are artificial circles surrounding the caustics. This may be caused by the predefined search radius. Another disadvantage is that this algorithm is not very efficient. Since it traverses all the photons to find nearby ones at each hit position, the time complexity is O(N), where N is the number of photons we emit.
 
 ### Naive Caustics
-![](img/sphereNaive.PNG)
+![](img/naive1.PNG)
 
 ## Stochastic Spatial Hashing
 
