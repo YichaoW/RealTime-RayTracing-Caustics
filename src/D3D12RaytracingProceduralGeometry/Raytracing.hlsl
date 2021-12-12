@@ -36,6 +36,7 @@ StructuredBuffer<Vertex> g_vertices : register(t2, space0);
 StructuredBuffer<PrimitiveInstancePerFrameBuffer> g_AABBPrimitiveAttributes : register(t3, space0);
 ConstantBuffer<PrimitiveConstantBuffer> l_materialCB : register(b1);
 ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
+ConstantBuffer<PrimitiveConstantBuffer> l_glassMaterialCB : register(b3);
 
 
 RWStructuredBuffer<Photon> g_photons : register(u1);
@@ -268,30 +269,109 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
 
     float checkers = AnalyticalCheckersTexture(HitWorldPosition(), triangleNormal, g_sceneCB.cameraPosition.xyz, g_sceneCB.projectionToWorld);
 
-    // Reflected component.
+
+    int materialIdx = g_vertices[indices[0]].materialIdx;
+
+    float refractCoef;
+    float reflectanceCoef;
+    float4 albedo;
+    float diffuseCoef;
+    float specularCoef;
+    float specularPower;
+
+    if (materialIdx == 0) {
+        refractCoef = l_materialCB.refractCoef;
+        reflectanceCoef = l_materialCB.reflectanceCoef;
+        albedo = l_materialCB.albedo;
+        diffuseCoef = l_materialCB.diffuseCoef;
+        specularCoef = l_materialCB.specularCoef;
+        specularPower = l_materialCB.specularPower;
+
+    }
+    else {
+        refractCoef = l_glassMaterialCB.refractCoef;
+        reflectanceCoef = l_glassMaterialCB.reflectanceCoef;
+        albedo = l_glassMaterialCB.albedo;
+        diffuseCoef = l_glassMaterialCB.diffuseCoef;
+        specularCoef = l_glassMaterialCB.specularCoef;
+        specularPower = l_glassMaterialCB.specularPower;
+    }
+
+    // Reflected and refracted component.
+    float4 color = float4(0, 0, 0, 0);
     float4 reflectedColor = float4(0, 0, 0, 0);
-    if (l_materialCB.reflectanceCoef > 0.001 )
+    float4 refractedColor = float4(0, 0, 0, 0);
+    float niOvernt;
+    float3 realNormal;
+
+    if (refractCoef > 0.001) {
+        float rayDotNormal = dot(WorldRayDirection(), triangleNormal);
+        float temp = 1.5;
+        if (rayDotNormal > 0.0) {
+            realNormal = -triangleNormal;
+            niOvernt = temp;
+        }
+        else {
+            realNormal = triangleNormal;
+            niOvernt = 1.0 / temp;
+        }
+
+
+        float cosine = dot(-WorldRayDirection(), realNormal);
+        float discriminant = 1.0 - niOvernt * niOvernt * (1.0 - cosine * cosine);
+
+        if (discriminant > 0) {
+
+            float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
+            Ray refractionRay = { HitWorldPosition() + 0.01 * newDir , newDir };
+            float4 refractionColor = TraceRadianceRay(refractionRay, rayPayload.recursionDepth);
+            refractedColor = float4(1.0, 1.0, 1.0, 1.0) * refractionColor;
+            color = refractionColor;
+            //color = float4(newDir.x,0,0,1);
+        }
+        else {
+            Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
+            float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
+
+            float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), triangleNormal, albedo.xyz);
+            reflectedColor = reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
+
+            // Calculate final color.
+            float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
+            color = reflectedColor;
+        }
+
+    }
+    else if (reflectanceCoef > 0.001)
     {
         // Trace a reflection ray.
         Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), triangleNormal) };
         float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
 
-        float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), triangleNormal, l_materialCB.albedo.xyz);
-        reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
+        float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), triangleNormal, albedo.xyz);
+        reflectedColor = reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
+
     }
 
+
+    if (refractCoef > 0.001) {
+        // do nothing
+    }
+    else {
+        // Calculate final color.
+        float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
+        float4 causticsColor = computeCaustics(hitPosition, phongColor);
+        color += checkers * (phongColor + reflectedColor) + causticsColor;;
+    }
+
+        /*float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
+        float4 causticsColor = computeCaustics(hitPosition, phongColor);
+        float4 color = checkers * (phongColor + reflectedColor) + causticsColor;;*/
+
     // Calculate final color.
-    bool hasPhoton = false;
-
-    float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, triangleNormal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-    float4 causticsColor = computeCaustics(hitPosition, phongColor);
-   // float4 color = checkers * (phongColor + reflectedColor) + causticsColor;;
-    float4 color = phongColor + reflectedColor + causticsColor;;
-
     // Apply visibility falloff.
     float t = RayTCurrent();
     color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
-
     rayPayload.color = color;
 }
 
@@ -370,8 +450,8 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     else {
         // Calculate final color.
         float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-        float4 causticColor = computeCaustics(hitPosition, phongColor);
-        color += phongColor + reflectedColor +causticColor;
+        //float4 causticColor = computeCaustics(hitPosition, phongColor);
+        color += phongColor + reflectedColor;// +causticColor;
     }
 
     // Apply visibility falloff.

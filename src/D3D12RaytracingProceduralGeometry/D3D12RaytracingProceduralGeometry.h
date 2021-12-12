@@ -92,11 +92,13 @@ private:
 
     // Root constants
     PrimitiveConstantBuffer m_planeMaterialCB;
+    PrimitiveConstantBuffer m_glassMaterialCB;
     PrimitiveConstantBuffer m_aabbMaterialCB[IntersectionShaderType::TotalPrimitiveCount];
 
     // Geometry
     D3DBuffer m_indexBuffer;
     D3DBuffer m_vertexBuffer;
+
     D3DBuffer m_aabbBuffer;
 
     // Acceleration structure
@@ -144,6 +146,8 @@ private:
     XMVECTOR m_at;
     XMVECTOR m_up;
 
+
+
     void UpdateCameraMatrices();
     void UpdateAABBPrimitiveAttributes(float animationTime);
     void InitializeScene();
@@ -153,7 +157,7 @@ private:
     void DoPhotontracing();
     void CreatePhotonGBuffers();
 
-    void LoadModel();
+    
     void CreateConstantBuffers();
     void CreateAABBPrimitiveAttributesBuffers();
     void CreateDeviceDependentResources();
@@ -178,6 +182,8 @@ private:
     void BuildProceduralGeometryAABBs();
     void BuildGeometry();
     void BuildPlaneGeometry();
+    void LoadModel(std::string filepath, XMFLOAT3 scale, XMFLOAT3 translation);
+    void CreateVertexIndexBuffers();
     void BuildGeometryDescsForBottomLevelAS(std::array<std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>, BottomLevelASType::Count>& geometryDescs);
     template <class InstanceDescType, class BLASPtrType>
     void BuildBotomLevelASInstanceDescs(BLASPtrType *bottomLevelASaddresses, ComPtr<ID3D12Resource>* instanceDescsResource);

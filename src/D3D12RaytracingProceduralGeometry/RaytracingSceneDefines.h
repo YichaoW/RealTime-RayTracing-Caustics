@@ -41,11 +41,13 @@ namespace LocalRootSignature {
         namespace Slot {
             enum Enum {
                 MaterialConstant = 0,
+                GlassMaterialConstant,
                 Count
             };
         }
         struct RootArguments {
             PrimitiveConstantBuffer materialCb;
+            PrimitiveConstantBuffer glassMaterialCb;
         };
     }
 }
