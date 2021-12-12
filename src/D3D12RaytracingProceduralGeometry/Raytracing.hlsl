@@ -73,18 +73,11 @@ float4 computeCausticsNaive(in float3 hitPosition, in float3 f) {
                                      
 float4 computeCaustics(in float3 hitPosition, in float3 f) {
     float3 color = (0,0,0);
-    int index = -1;
-
-    float weights[PHOTON_TOTAL_STEP];
-    float3 colors[PHOTON_TOTAL_STEP];
-
     float totalDist = 0; 
     uint3 hitCoord = GetPhotonSpatialCoord(hitPosition);
     for (float i = -PHOTON_HALF_STEP; i <= PHOTON_HALF_STEP; i ++) {
         for (int j = -PHOTON_HALF_STEP; j <= PHOTON_HALF_STEP; j ++) {
             for (float k = -PHOTON_HALF_STEP; k <= PHOTON_HALF_STEP; k ++) {
-                index++;
-
                 float3 pos = hitPosition;
                 pos.x += i * PHOTON_CELL_SIZE;
                 pos.y += j * PHOTON_CELL_SIZE;
@@ -94,44 +87,18 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
                 totalDist += dist;
 
                 if (neighborCoord.x == -1) {
-                    weights[index] = 0.f;
-                    colors[index] = float3(0,0,0);
                     continue;
                 }
-
-
                 int photonIndex = GetPhotonSpatialIndex(pos);
                 Photon p = g_photons[photonIndex];
-
-                weights[index] = dist;
-                colors[index] = p.throughput * f * p.count;
+                color += dist * p.throughput * f * p.count;
             }
         }
     }
-
-    
-
     if (totalDist != 0) {
-        float3 temp = {0,0,0};
-        for (int i = 0; i < PHOTON_TOTAL_STEP; i++) {
-            temp += weights[i] / totalDist * colors[i];
-        }   
-        return float4(temp, 1);
+        return float4(color/totalDist, 1);
     }
     return float4(0, 0, 0, 1);
-
-    //  float3 pos = hitPosition;
-    //             int photonIndex = GetPhotonSpatialIndex(pos);
-    //             if (photonIndex == -1) {
-    //                 return float4(0, 0, 0, 1);
-    //             }
-    //             Photon p = g_photons[photonIndex];
-    //             float4 color = float4(p.throughput * f * p.count, 1);
-    //             if (p.count > 0) {
-    //                 return color;// float4(1, 0, 0, 1);
-    //             }
-    // return float4(0, 0, 0, 1);
-
 }
 
 // Diffuse lighting calculation.
