@@ -89,7 +89,7 @@ float4 computeCaustics(in float3 hitPosition, in float3 f) {
                 if (neighborCoord.x == -1) {
                     continue;
                 }
-                int photonIndex = GetPhotonSpatialIndex(pos);
+                int photonIndex = HashSpatial(neighborCoord, 4 * PHOTON_NUM);
                 Photon p = g_photons[photonIndex];
                 color += dist * p.throughput * f * p.count;
             }

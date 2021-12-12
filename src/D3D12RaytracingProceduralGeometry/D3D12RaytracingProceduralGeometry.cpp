@@ -1569,6 +1569,30 @@ void D3D12RaytracingProceduralGeometry::OnKeyDown(UINT8 key)
     case 'L':
         m_animateLight = !m_animateLight;
         break;
+    case 'W':
+        m_eye = XMVectorAdd(m_eye, {0.0, 0.0 ,0.2f, 0.0});
+        UpdateCameraMatrices();
+        break;
+    case 'S':
+        m_eye = XMVectorAdd(m_eye, {0.0, 0.0 , -0.2f, 0.0});
+        UpdateCameraMatrices();
+        break;
+    case 'D':
+        m_eye = XMVectorAdd(m_eye, { 0.2, 0.0 ,0.0, 0.0 });
+        UpdateCameraMatrices();
+        break;
+    case 'A':
+        m_eye = XMVectorAdd(m_eye, { -0.2, 0.0 ,0.0, 0.0 });
+        UpdateCameraMatrices();
+        break;
+    case 'Q':
+        m_eye = XMVectorAdd(m_eye, { 0.0, 0.2 ,0.0, 0.0 });
+        UpdateCameraMatrices();
+        break;
+    case 'E':
+        m_eye = XMVectorAdd(m_eye, { 0.0, -0.2 ,0.0, 0.0 });
+        UpdateCameraMatrices();
+        break;
     }
 }
 

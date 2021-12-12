@@ -182,7 +182,7 @@ float3 FresnelReflectanceSchlick(in float3 I, in float3 N, in float3 f0)
 }
 
 
-uint hashSpatial(int3 p, int hashSize) {
+uint HashSpatial(uint3 p, int hashSize) {
     return (uint)((p.x * 73856093) ^ (p.y * 19349663) ^
                           (p.z * 83492791)) %
            hashSize;
@@ -193,21 +193,6 @@ int3 GetPhotonSpatialCoord(in float3 pos) {
         return int3(-1,-1,-1);
     }
     return floor((pos - PHOTON_MIN_BOUND) / PHOTON_CELL_SIZE);
-}
-
-uint GetPhotonSpatialIndex(in float3 pos) {
-
-    if (min(pos.x, min(pos.y, pos.z)) < PHOTON_MIN_BOUND || max(pos.x, max(pos.y, pos.z)) > PHOTON_MAX_BOUND) {
-        return -1;
-    }
-
-    //float2 pos = TexCoords(pos1);
-
-
-    //float2 pos1 = TexCoords(pos);
-    pos = floor((pos - PHOTON_MIN_BOUND)/ PHOTON_CELL_SIZE);
-    return hashSpatial(pos, 4 * PHOTON_NUM);
-   // return pos1.x + pos1.y * PHOTON_GRID_WIDTH;// + pos.z * width *width;
 }
 
 #endif // RAYTRACINGSHADERHELPER_H

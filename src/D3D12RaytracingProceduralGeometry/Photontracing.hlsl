@@ -48,10 +48,11 @@ void StorePhotonNaive(Photon p) {
 }
 
 void StorePhoton(Photon p) {
-    int photonIndex = GetPhotonSpatialIndex(p.position);
-    if (photonIndex == -1) {
+    int3 photonCoord = GetPhotonSpatialCoord(p.position);
+    if (photonCoord.x == -1) {
         return;
     }
+    int photonIndex = HashSpatial(photonCoord, 4 * PHOTON_NUM);
     Photon temp = g_photons[photonIndex];
 
     if (temp.count == 0) {
