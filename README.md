@@ -111,7 +111,7 @@ Note that the fps for sphere without caustics is about 300fps.
 
 The number of photons will affect both fps and the visual effect in naive search. We can see both performance is unsatisfactory from the below images.
 
-| 2^12 photons(15 fps) | 2^12 photons(11 fps) |2^12 photons(8 fps) |
+| 2^8 photons(15 fps) | 2^12 photons(11 fps) |2^16 photons(8 fps) |
 |---|---|---|
 |![](img/naive1.PNG) | ![](img/naive3.PNG) | ![](img/naive2.PNG) |
 
