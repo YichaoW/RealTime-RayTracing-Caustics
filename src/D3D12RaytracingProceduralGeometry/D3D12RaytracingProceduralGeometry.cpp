@@ -300,7 +300,8 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         XMFLOAT4 lightDiffuseColor;
         XMFLOAT4 lightNormal;
 
-        lightPosition = XMFLOAT4(0.0f, 8.0f, -10.0f, 0.0f);
+        //lightPosition = XMFLOAT4(0.0f, 50.0f, -5.0f, 0.0f);
+        lightPosition = XMFLOAT4(0.0f, 8.0f, -6.0f, 0.0f);
         m_sceneCB->lightPosition = XMLoadFloat4(&lightPosition);
 
         lightNormal = XMFLOAT4(0.0f - lightPosition.x, 0.0f - lightPosition.y, 0.0f - lightPosition.z, 0.0f);
@@ -1098,6 +1099,11 @@ void D3D12RaytracingProceduralGeometry::LoadModel(std::string filepath, XMFLOAT3
 
             }
 
+            if (hasNormal) {
+
+                wstr << L"We havr normallllllllllllllllllllllllllllllllllllll " << L"\n";
+            }
+
             // populate vertices, indices, normals, texcoords
             for (int i = 0; i < 3; ++i)
             {
@@ -1117,9 +1123,134 @@ void D3D12RaytracingProceduralGeometry::LoadModel(std::string filepath, XMFLOAT3
 
 
     //wstr << test << L"has normal " <<  L"\n";
+
+    
     OutputDebugStringW(wstr.str().c_str());
 }
 
+
+void D3D12RaytracingProceduralGeometry::LoadModelComputeNormal(std::string filepath, XMFLOAT3 scale, XMFLOAT3 translation)
+{
+
+    auto device = m_deviceResources->GetD3DDevice();
+
+    TCHAR pwd[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, pwd);
+    //MessageBox(NULL, pwd, pwd, 0);
+
+    //m_vertices = new 
+
+    std::wstringstream wstr;
+    wstr << L"haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
+
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+
+    std::string warn;
+    std::string err;
+    //std::string filepath("../../obj/teapot.obj");
+
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+        filepath.c_str());
+
+
+    if (!warn.empty()) {
+
+        wstr << L"WARN: " << warn.c_str() << L"\n";
+    }
+
+    if (!err.empty()) {
+
+        wstr << L"ERR: " << err.c_str() << L"\n";
+    }
+
+    if (!ret) {
+
+
+        wstr << L"Failed to load/parse .obj.\n";
+
+        OutputDebugStringW(wstr.str().c_str());
+        return;
+    }
+
+    bool test = false;
+    // loop over shapes
+    for (size_t s = 0; s < shapes.size(); ++s)
+    {
+        size_t index_offset = 0;
+        // loop over faces
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); ++f)
+        {
+            size_t fv = static_cast<size_t>(shapes[s].mesh.num_face_vertices[f]);
+
+            std::vector<Vertex> vertices;
+            bool hasNormal = false;
+            // loop over vertices
+            // get vertices, normals
+            for (size_t v = 0; v < fv; ++v)
+            {
+                Vertex vert;
+
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+                tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+                tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+                tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+
+                vert.position = { scale.x * vx + translation.x, scale.y * vy + translation.y, scale.z * vz + translation.z };
+
+
+                vert.materialIdx = 1;
+                vertices.push_back(vert);
+            }
+
+           
+            const XMFLOAT3 v0float = vertices[0].position;
+            const XMFLOAT3 v1float = vertices[1].position;
+            const XMFLOAT3 v2float = vertices[2].position;
+
+
+            XMVECTOR v0 = XMLoadFloat3(&v0float);
+            XMVECTOR v1 = XMLoadFloat3(&v1float);
+            XMVECTOR v2 = XMLoadFloat3(&v2float);
+
+            XMVECTOR e0 = XMVector3Normalize(v1 - v0);
+            XMVECTOR e1 = XMVector3Normalize(v2 - v0);
+            XMVECTOR n = XMVector3Normalize(XMVector3Cross(e0, e1));
+
+            XMFLOAT3 nfloat;
+            XMStoreFloat3(&nfloat, n);
+            for (int i = 0; i < vertices.size(); i++) {
+                vertices[i].normal = nfloat;
+            }
+
+
+      
+
+            // populate vertices, indices, normals, texcoords
+            for (int i = 0; i < 3; ++i)
+            {
+                this->m_vertices.push_back(vertices[i]);
+                this->m_indices.push_back(this->m_indices.size());
+
+            }
+
+            index_offset += fv;
+        }
+    }
+
+    //wstr << L"[Scene] vertices: {} " << m_vertices.size() << L"\n";
+    //wstr << L"[Scene] indices: {} " << m_indices.size() << L"\n";
+
+    //wstr << L"[Scene] vertices: {} " << shapes[0].mesh.indices.size() << L"\n";
+
+
+    //wstr << test << L"has normal " <<  L"\n";
+
+
+    OutputDebugStringW(wstr.str().c_str());
+}
 
 void D3D12RaytracingProceduralGeometry::CreateVertexIndexBuffers() {
 
@@ -1129,9 +1260,9 @@ void D3D12RaytracingProceduralGeometry::CreateVertexIndexBuffers() {
 
     std::wstringstream wstr;
     wstr << L"sizeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n";
-    for (int i = 0; i < m_indices.size(); i++) {
-        wstr << m_indices[i] << L"\n";
-    }
+    //for (int i = 0; i < m_indices.size(); i++) {
+    //    wstr << m_indices[i] << L"\n";
+    //}
     
     //wstr << sizeof(indices) << L"\n";
     OutputDebugStringW(wstr.str().c_str());
@@ -1153,9 +1284,14 @@ void D3D12RaytracingProceduralGeometry::BuildGeometry()
     
     BuildProceduralGeometryAABBs();
     BuildPlaneGeometry();
-    //LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -2.1f});
+    LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -2.1f});
     //LoadModel("../../obj/glass.obj", { 0.3f, 0.3f, 0.3f }, { -4.0f, 1.7f, -4.0f });
-    LoadModel("../../obj/chalice.obj", { 0.5f, 0.5f, 0.5f }, { -4.0f, 1.5f, -2.1f });
+    //LoadModel("../../obj/chalice.obj", { 0.5f, 0.5f, 0.5f }, { -4.0f, 1.5f, -2.1f });
+    //LoadModel("../../obj/coffee_cup_2.obj", { 0.5f, 0.5f, 0.5f }, { -4.0f, 0.4f, -4.1f });
+    //LoadModel("../../obj/Medieval_Jug_Lowpoly_OBJ.obj", { 0.05f, 0.05f, 0.05f }, { -4.0f, 0.4f, -4.1f });
+    //LoadModel("../../obj/starbucks.obj", { 1.0f, 1.0f, 1.0f }, { -4.0f, 0.4f, -4.1f });
+    //LoadModelComputeNormal("../../obj/whisky_glass.obj", { 0.01f, 0.01f, 0.01f }, { -4.0f, 1.1f, -4.1f });
+    //LoadModel("../../obj/water2.obj", { 0.5f, 2.1f, 0.5f }, { -6.0f, 2.1f, -4.1f });
 
     CreateVertexIndexBuffers();
 

@@ -183,6 +183,7 @@ private:
     void BuildGeometry();
     void BuildPlaneGeometry();
     void LoadModel(std::string filepath, XMFLOAT3 scale, XMFLOAT3 translation);
+    void LoadModelComputeNormal(std::string filepath, XMFLOAT3 scale, XMFLOAT3 translation);
     void CreateVertexIndexBuffers();
     void BuildGeometryDescsForBottomLevelAS(std::array<std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>, BottomLevelASType::Count>& geometryDescs);
     template <class InstanceDescType, class BLASPtrType>
