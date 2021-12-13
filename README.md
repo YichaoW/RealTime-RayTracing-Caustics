@@ -131,7 +131,7 @@ Note that the cell size is 0.02^3 for above images.
 
 As spatial grid's cell size increases, the caustics area increases and the fps also increases. Since grid size is fixed, increase of cell size means decrease the number of cells in the grid. Thus the fps increases.
 
-| 0.02^3 cell size(20 fps)| 0.1^3 cell size (42 fps)|0.1^3 cell size (84 fps) |
+| 0.02^3 cell size(20 fps)| 0.05^3 cell size (42 fps)|0.1^3 cell size (84 fps) |
 |----|----|----|
 | ![](img/sphereSpatial.PNG)|![](img/cs2.PNG) | ![](img/cs1.PNG)|
 
