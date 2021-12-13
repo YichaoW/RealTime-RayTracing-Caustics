@@ -16,8 +16,6 @@ The above two images are the caustics from glass and water in real life.
 
 ![](img/scene1.gif)
 
-![](img/scene2.gif)
-
 | Starbucks Coffee Cup | Chalice | 
 |----|----|
 |![cc41592d8df132130e5f6564a5a1be7](https://user-images.githubusercontent.com/66859615/145743478-7e5a9f43-6805-4c3b-8c47-5619bd7df51f.png)|![ae8c5449db8285ce50686c2e4931c60](https://user-images.githubusercontent.com/66859615/145751055-ba6a44bf-f9d4-4e52-a489-c923fede9949.png)|
@@ -49,6 +47,8 @@ This project implements real-time ray tracing techniques for rendering caustics 
 [Milestone2 Slides](https://docs.google.com/presentation/d/1bBe-m0S8USm9JjuZ0aMPiBgOyF8d1e4xpH3DJyMze_Q/edit?usp=sharing)
 
 [Milestone3 Slides](https://docs.google.com/presentation/d/1QpMr9G-N3W1MqqeVK1NEGOBwIfzCrvPcZRigRFSnQKE/edit?usp=sharing)
+
+[Final Presentation Slides](https://docs.google.com/presentation/d/1lXtzdiO8Sl1oVXlGfj3GPwdGiJWWgR9KH7FnC0Xbiig/edit#slide=id.g105a526e0e9_1_27)
 
 ## DirectX RayTracing
 
@@ -154,3 +154,5 @@ Note that the photon number is 2^24 for above images.
 [Photon Mapping GPU](https://cs.uwaterloo.ca/~thachisu/gpuppm_slides.pdf)
 
 [Progressive Photon Mapping on GPUs](https://apartridge.github.io/OppositeRenderer/master/masteroppgave.pdf)
+
+[Microsoft DXR Mannual](https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html)
