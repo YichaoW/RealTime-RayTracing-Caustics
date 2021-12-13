@@ -12,7 +12,7 @@ The above two images are the caustics from glass and water in real life.
 
 ### Cool Results
 
-#### Live Demo
+#### Live Demo (16 million photons)
 
 ![](img/scene1.gif)
 
