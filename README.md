@@ -11,14 +11,24 @@ Caustic is the term used to describe the patterns of light and color that occur 
 The above two images are the caustics from glass and water in real life.
 
 ### Cool Results
+
+#### Live Demo
+
+![](img/scene1.gif)
+
+![](img/scene2.gif)
+
 | Starbucks Coffee Cup | Chalice | 
 |----|----|
 |![cc41592d8df132130e5f6564a5a1be7](https://user-images.githubusercontent.com/66859615/145743478-7e5a9f43-6805-4c3b-8c47-5619bd7df51f.png)|![d39186e6aacdb299692a544b7c4aed2](https://user-images.githubusercontent.com/66859615/145743493-6e38d61d-3f1e-41f7-9979-2892d9adf65e.png)|
 
-| Utah Teapot | Chalice| 
+| Utah Teapot | Cat| 
 |----|----|
-|![bb31e063d4e81ed3a6a8f7e2a022373](https://user-images.githubusercontent.com/66859615/145743504-a286e6ba-c1b7-4b22-b907-e2b807e5c8ea.png) | |
+|![bb31e063d4e81ed3a6a8f7e2a022373](https://user-images.githubusercontent.com/66859615/145743504-a286e6ba-c1b7-4b22-b907-e2b807e5c8ea.png) | ![](img/cat.PNG)|
 
+#### Water
+
+![](img/water.PNG)
 
 ### Project Implementation
 
@@ -128,7 +138,7 @@ Note that the photon number is 2^24 for above images.
 ## Future Work
 * GPU KD Tree nearest neighbor search, spatial hashing is a good estimation but not detailed enough
 * Support more model import, including mtl, gltf. Make the DXR pipeline more efficient with large models
-* Raytracing and photon tracing with more bounces and indirect light to improve ovarall quality
+* Raytracing and photon tracing with more bounces and indirect light to improve overall quality
 
 ## References
 
