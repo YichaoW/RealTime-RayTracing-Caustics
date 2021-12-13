@@ -10,6 +10,16 @@ Caustic is the term used to describe the patterns of light and color that occur 
 
 The above two images are the caustics from glass and water in real life.
 
+### Cool Results
+| Starbucks Coffee Cup | Chalice | 
+|----|----|
+|![cc41592d8df132130e5f6564a5a1be7](https://user-images.githubusercontent.com/66859615/145743478-7e5a9f43-6805-4c3b-8c47-5619bd7df51f.png)|![d39186e6aacdb299692a544b7c4aed2](https://user-images.githubusercontent.com/66859615/145743493-6e38d61d-3f1e-41f7-9979-2892d9adf65e.png)|
+
+| Utah Teapot | Chalice| 
+|----|----|
+|![bb31e063d4e81ed3a6a8f7e2a022373](https://user-images.githubusercontent.com/66859615/145743504-a286e6ba-c1b7-4b22-b907-e2b807e5c8ea.png) | |
+
+
 ### Project Implementation
 
 This project implements real-time ray tracing techniques for rendering caustics effects using [DirectX RayTracing(DXR)](#directx-raytracing(dxr)). The main idea to visualize caustics is to use photon tracing. Caustics are commonly seen in water, metallic, and transparent surfaces but they are either ignored or roughly handled such as decal textures. GPU ray tracing brings photon mapping which is currently most efficient algorithm to calculate caustics pattern. We used several research papers to guide us to produce the final result. See [References](#references).
@@ -42,9 +52,25 @@ Photon mapping realistically simulates the interaction of light with different t
 
 Caustics photon map is slightly different from traditional photon map. For caustics, we only store photons that hit a diffuse object and its previous hit is a specular object. After that, we compute the caustics through ray tracing.
 
+### Sphere
 | Refraction Sphere| Refraction Sphere with caustics |
 |----|----|
 | ![](img/sphereRefract.PNG) | ![](img/sphereNaive.PNG)|
+
+### Cube
+| Refraction Cube| Refraction Cube with Photon Visualization| 
+|----|----|
+|![1884c430f96104aae22d4216a4313e2](https://user-images.githubusercontent.com/66859615/145742006-e353051f-e481-42d1-8a2d-3fffeb0e47af.png) | ![a568c9ba31f0b17cabcd576b269d816](https://user-images.githubusercontent.com/66859615/145742134-e3379a14-16cb-47a4-9280-2bb5ab122fba.png)|
+
+| Naive k nearest neightbor| Spatial Hashing 1| 
+|----|----|
+|![871a2f749906c051b73b73ee0172944](https://user-images.githubusercontent.com/66859615/145742172-cb66d801-290a-4276-b291-d501b772088e.png) | ![e897172f6213197d2b6b428ce81b102](https://user-images.githubusercontent.com/66859615/145742463-e80bdb45-b5d1-466c-8181-74bb3ace6657.png)|
+
+| Spatial Hashing 2| Real Life Reference image | 
+|----|----|
+| ![82ec8afde0e77b5b89910495c3bc136](https://user-images.githubusercontent.com/66859615/145742524-4584380e-65bb-4457-b1b0-d06becc2dfd2.png)|![e9e2808e5e26dc4ef2435b5d28d24d5](https://user-images.githubusercontent.com/66859615/145742838-c5fb438d-0cd0-4d80-a4df-856891256982.png) |
+
+
 
 ## Naive Search
 
@@ -97,6 +123,13 @@ As spatial grid's cell size increases, the caustics area increases and the fps a
 | ![](img/sphereSpatial.PNG)|![](img/cs2.PNG) | ![](img/cs1.PNG)|
 
 Note that the photon number is 2^24 for above images.
+
+
+## Limitation and Future Improvement
+* 
+* Visual Studio 2019
+* DirectX RayTracing(DXR)
+* GeForce GTX 1060
 
 ## References
 
