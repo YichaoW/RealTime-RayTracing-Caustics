@@ -115,6 +115,9 @@ The number of photons will affect both fps and the visual effect in naive search
 |---|---|---|
 |![](img/naive1.PNG) | ![](img/naive3.PNG) | ![](img/naive2.PNG) |
 
+![naive](https://user-images.githubusercontent.com/66859615/145753795-3d6f11ec-efd2-47ee-8380-116a865fa88b.png)
+
+
 ### Spatial Hashing
 
 #### Number of Photons
@@ -127,6 +130,8 @@ Like naive search, the number of photons will also affect both fps and the visua
 
 Note that the cell size is 0.02^3 for above images.
 
+![spatial_photon](https://user-images.githubusercontent.com/66859615/145753816-0681abfe-c3b3-42a0-96c0-3825f2a0d66f.png)
+
 #### Cell Size
 
 As spatial grid's cell size increases, the caustics area increases and the fps also increases. Since grid size is fixed, increase of cell size means decrease the number of cells in the grid. Thus the fps increases.
@@ -137,6 +142,7 @@ As spatial grid's cell size increases, the caustics area increases and the fps a
 
 Note that the photon number is 2^24 for above images.
 
+![spatial_cell](https://user-images.githubusercontent.com/66859615/145753847-eb660b7b-754c-4a2f-b409-6ea528fad8f7.png)
 
 ## Future Work
 * GPU KD Tree nearest neighbor search, spatial hashing is a good estimation but not detailed enough
