@@ -310,6 +310,14 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
         specularPower = l_glassMaterialCB.specularPower;
     }
 
+    if (materialIdx == 1) {
+
+    }
+    else if (materialIdx == 2) {
+
+
+    }
+
     // Reflected and refracted component.
     float4 color = float4(0, 0, 0, 0);
     float4 reflectedColor = float4(0, 0, 0, 0);
@@ -374,7 +382,7 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
         // Calculate final color.
         float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
         float4 causticsColor = computeCaustics(hitPosition, phongColor);
-        color += checkers * (phongColor + reflectedColor) + causticsColor;;
+        color += checkers * (phongColor + reflectedColor)+ causticsColor;;
     }
 
         /*float4 phongColor = CalculatePhongLighting(albedo, triangleNormal, shadowRayHit, diffuseCoef, specularCoef, specularPower);
@@ -429,7 +437,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
             Ray refractionRay = { HitWorldPosition() + 0.01 * newDir , newDir };
             float4 refractionColor = TraceRadianceRay(refractionRay, rayPayload.recursionDepth);
             refractedColor = float4(1.0, 1.0, 1.0, 1.0) * refractionColor;
-            color = refractionColor;
+            color = refractedColor;
             //color = float4(newDir.x,0,0,1);
         }
         else {

@@ -301,7 +301,7 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         XMFLOAT4 lightNormal;
 
         //lightPosition = XMFLOAT4(0.0f, 50.0f, -5.0f, 0.0f);
-        lightPosition = XMFLOAT4(0.0f, 8.0f, -6.0f, 0.0f);
+        lightPosition = XMFLOAT4(2.0f, 10.0f, -9.0f, 0.0f);
         m_sceneCB->lightPosition = XMLoadFloat4(&lightPosition);
 
         lightNormal = XMFLOAT4(0.0f - lightPosition.x, 0.0f - lightPosition.y, 0.0f - lightPosition.z, 0.0f);
@@ -877,7 +877,7 @@ void D3D12RaytracingProceduralGeometry::BuildProceduralGeometryAABBs()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            //m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0.1, 1), XMFLOAT3(2, 3, 2));
+            m_aabbs[offset + AABB] = InitializeAABB(XMINT3(1, 0.1, 1), XMFLOAT3(2, 3, 2));
             // m_aabbs[offset + Floor] = InitializeAABB(XMINT3(-10, 0, -10), XMFLOAT3(100, 0.01, 100));
             //m_aabbs[offset + Sphere] = InitializeAABB(XMFLOAT3(1, 0.2, 1), XMFLOAT3(2, 2, 2));
             offset += AnalyticPrimitive::Count;
@@ -925,7 +925,7 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
 
     };
 
-    for (int i = 0; i <= 5; i++) {
+    for (int i = 0; i <=17; i++) {
         
         m_indices.push_back(i);
     }
@@ -940,6 +940,9 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
             {XMFLOAT3(0.0f, -0.1f, 2798.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
         };*/
 
+
+    float width = 20;
+    float height = 30;
     Vertex vertices[] =
     {
         {XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
@@ -948,6 +951,14 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
         {XMFLOAT3(1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
         {XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
         {XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0},
+
+
+        {XMFLOAT3(width, -0.1f, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
+        {XMFLOAT3(width, width, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
+        {XMFLOAT3(width, -0.1f, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
+        {XMFLOAT3(width, width, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
+        {XMFLOAT3(width, width, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
+        {XMFLOAT3(width, -0.1f, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0},
     };
 
     Vertex v0 = { XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
@@ -957,6 +968,20 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
     Vertex v4 = { XMFLOAT3(1400.0f, -0.1f, -1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
     Vertex v5 = { XMFLOAT3(-1400.0f, -0.1f, 1400.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 0 };
 
+    Vertex v6 = { XMFLOAT3(width, -0.1f, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+    Vertex v7 = { XMFLOAT3(width, width, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+    Vertex v8 = { XMFLOAT3(width, -0.1f, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+    Vertex v9 = { XMFLOAT3(width, width, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+    Vertex v10 = { XMFLOAT3(width, width, -width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+    Vertex v11 = { XMFLOAT3(width, -0.1f, width), XMFLOAT3(-1.0f, 0.0f, 0.0f), 0 };
+
+    Vertex v12 = { XMFLOAT3(-width, width, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+    Vertex v13 = { XMFLOAT3(width, -0.1f, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+    Vertex v14 = { XMFLOAT3(-width, -0.1f, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+    Vertex v15 = { XMFLOAT3(width, width, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+    Vertex v16 = { XMFLOAT3(width, -0.1, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+    Vertex v17 = { XMFLOAT3(-width, width, width), XMFLOAT3(0.0f, 0.0f, -1.0f), 0 };
+
 
     m_vertices.push_back(v0);
     m_vertices.push_back(v1);
@@ -964,6 +989,21 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
     m_vertices.push_back(v3);
     m_vertices.push_back(v4);
     m_vertices.push_back(v5);
+
+
+    m_vertices.push_back(v6);
+    m_vertices.push_back(v7);
+    m_vertices.push_back(v8);
+    m_vertices.push_back(v9);
+    m_vertices.push_back(v10);
+    m_vertices.push_back(v11);
+
+    m_vertices.push_back(v12);
+    m_vertices.push_back(v13);
+    m_vertices.push_back(v14);
+    m_vertices.push_back(v15);
+    m_vertices.push_back(v16);
+    m_vertices.push_back(v17);
 
 
     /*std::wstringstream wstr;
@@ -1284,7 +1324,7 @@ void D3D12RaytracingProceduralGeometry::BuildGeometry()
     
     BuildProceduralGeometryAABBs();
     BuildPlaneGeometry();
-    LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -2.1f});
+    //LoadModel("../../obj/teapot.obj",{ 10.0f, 10.0f, 10.0f }, {-4.0f, 0.1f, -2.1f});
     //LoadModel("../../obj/glass.obj", { 0.3f, 0.3f, 0.3f }, { -4.0f, 1.7f, -4.0f });
     //LoadModel("../../obj/chalice.obj", { 0.5f, 0.5f, 0.5f }, { -4.0f, 1.5f, -2.1f });
     //LoadModel("../../obj/coffee_cup_2.obj", { 0.5f, 0.5f, 0.5f }, { -4.0f, 0.4f, -4.1f });
@@ -1292,6 +1332,8 @@ void D3D12RaytracingProceduralGeometry::BuildGeometry()
     //LoadModel("../../obj/starbucks.obj", { 1.0f, 1.0f, 1.0f }, { -4.0f, 0.4f, -4.1f });
     //LoadModelComputeNormal("../../obj/whisky_glass.obj", { 0.01f, 0.01f, 0.01f }, { -4.0f, 1.1f, -4.1f });
     //LoadModel("../../obj/water2.obj", { 0.5f, 2.1f, 0.5f }, { -6.0f, 2.1f, -4.1f });
+     //LoadModel("../../obj/cat.obj", { 0.1f, 0.1f, 0.1f }, { -2.0f, -35.1f, -12.1f });
+
 
     CreateVertexIndexBuffers();
 

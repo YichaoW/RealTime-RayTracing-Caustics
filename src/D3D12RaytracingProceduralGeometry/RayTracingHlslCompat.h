@@ -57,7 +57,7 @@ typedef UINT16 Index;
 #define PHOTON_HALF_STEP 2 // step for gaussian blur
 #define PHOTON_TOTAL_STEP (PHOTON_HALF_STEP * 2 + 1) * (PHOTON_HALF_STEP * 2 + 1) * (PHOTON_HALF_STEP * 2 + 1)
 // for photon map spatial hashing
-#define PHOTON_CELL_SIZE 0.02f
+#define PHOTON_CELL_SIZE 0.04f
 #define PHOTON_MAX_BOUND 20.f
 #define PHOTON_MIN_BOUND -20.f
 #define PHOTON_GRID_WIDTH (PHOTON_MAX_BOUND-PHOTON_MIN_BOUND)/PHOTON_CELL_SIZE
