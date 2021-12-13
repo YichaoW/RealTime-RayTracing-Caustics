@@ -125,11 +125,10 @@ As spatial grid's cell size increases, the caustics area increases and the fps a
 Note that the photon number is 2^24 for above images.
 
 
-## Limitation and Future Improvement
-* 
-* Visual Studio 2019
-* DirectX RayTracing(DXR)
-* GeForce GTX 1060
+## Future Work
+* GPU KD Tree nearest neighbor search, spatial hashing is a good estimation but not detailed enough
+* Support more model import, including mtl, gltf. Make the DXR pipeline more efficient with large models
+* Raytracing and photon tracing with more bounces and indirect light to improve ovarall quality
 
 ## References
 
