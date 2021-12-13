@@ -20,11 +20,11 @@ The above two images are the caustics from glass and water in real life.
 
 | Starbucks Coffee Cup | Chalice | 
 |----|----|
-|![cc41592d8df132130e5f6564a5a1be7](https://user-images.githubusercontent.com/66859615/145743478-7e5a9f43-6805-4c3b-8c47-5619bd7df51f.png)|![d39186e6aacdb299692a544b7c4aed2](https://user-images.githubusercontent.com/66859615/145743493-6e38d61d-3f1e-41f7-9979-2892d9adf65e.png)|
+|![cc41592d8df132130e5f6564a5a1be7](https://user-images.githubusercontent.com/66859615/145743478-7e5a9f43-6805-4c3b-8c47-5619bd7df51f.png)|![ae8c5449db8285ce50686c2e4931c60](https://user-images.githubusercontent.com/66859615/145751055-ba6a44bf-f9d4-4e52-a489-c923fede9949.png)|
 
 | Utah Teapot | Cat| 
 |----|----|
-|![bb31e063d4e81ed3a6a8f7e2a022373](https://user-images.githubusercontent.com/66859615/145743504-a286e6ba-c1b7-4b22-b907-e2b807e5c8ea.png) | ![](img/cat.PNG)|
+|![d6d233105f903ffbc724fe5b60fef2a](https://user-images.githubusercontent.com/66859615/145751074-cc1f2517-3422-4d32-990c-4c068d725bdd.png) | ![](img/cat.PNG)|
 
 #### Water
 
@@ -68,17 +68,20 @@ Caustics photon map is slightly different from traditional photon map. For caust
 | ![](img/sphereRefract.PNG) | ![](img/sphereNaive.PNG)|
 
 ### Cube
+
+The first image is a glass cube with pure refraction. The second image is the same glass cube with caustics map visualized. Next is the caustic radiance estimation result via naïve k nearest neighbor search, which includes 3 nearest photons. Next two images are the results using photon spatial hashing and nearby estimation. We can see the results are pretty close to real-life cube caustics shown in the last reference image.
+
 | Refraction Cube| Refraction Cube with Photon Visualization| 
 |----|----|
-|![1884c430f96104aae22d4216a4313e2](https://user-images.githubusercontent.com/66859615/145742006-e353051f-e481-42d1-8a2d-3fffeb0e47af.png) | ![a568c9ba31f0b17cabcd576b269d816](https://user-images.githubusercontent.com/66859615/145742134-e3379a14-16cb-47a4-9280-2bb5ab122fba.png)|
+|![bd0cca6a6975f71aef8189d38c08fa9](https://user-images.githubusercontent.com/66859615/145750854-344bf454-e788-4255-b291-80cb19cb7249.png) | ![a568c9ba31f0b17cabcd576b269d816](https://user-images.githubusercontent.com/66859615/145742134-e3379a14-16cb-47a4-9280-2bb5ab122fba.png)|
 
 | Naive k nearest neightbor| Spatial Hashing 1| 
 |----|----|
-|![871a2f749906c051b73b73ee0172944](https://user-images.githubusercontent.com/66859615/145742172-cb66d801-290a-4276-b291-d501b772088e.png) | ![e897172f6213197d2b6b428ce81b102](https://user-images.githubusercontent.com/66859615/145742463-e80bdb45-b5d1-466c-8181-74bb3ace6657.png)|
+| ![2d56e82b3e96c65f19e68ae3789ef96](https://user-images.githubusercontent.com/66859615/145750890-300f7da5-5462-4541-90c9-72abb1f125a8.png)|![7d63c119751c9e0076689d84ae50004](https://user-images.githubusercontent.com/66859615/145750917-bfcc2f40-e721-4a8e-b320-2a7245cb465d.png) |
 
 | Spatial Hashing 2| Real Life Reference image | 
 |----|----|
-| ![82ec8afde0e77b5b89910495c3bc136](https://user-images.githubusercontent.com/66859615/145742524-4584380e-65bb-4457-b1b0-d06becc2dfd2.png)|![e9e2808e5e26dc4ef2435b5d28d24d5](https://user-images.githubusercontent.com/66859615/145742838-c5fb438d-0cd0-4d80-a4df-856891256982.png) |
+| ![dca30830dec344c2a1c6565d6ddfeb1](https://user-images.githubusercontent.com/66859615/145750950-aa302f99-414e-48f0-a076-820815a29255.png)|![e9e2808e5e26dc4ef2435b5d28d24d5](https://user-images.githubusercontent.com/66859615/145742838-c5fb438d-0cd0-4d80-a4df-856891256982.png) |
 
 
 
