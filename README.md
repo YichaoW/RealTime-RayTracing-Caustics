@@ -1,4 +1,5 @@
 # RealTime-RayTracing-Caustics
+![seas_logo](https://user-images.githubusercontent.com/66859615/145757013-eb5733fa-82aa-4700-8cae-214608875c1e.png)
 
 ## Overview
 
