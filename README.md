@@ -98,7 +98,7 @@ They are several algorithms to accumulate caustic photons near the hit position.
 
 ## Stochastic Spatial Hashing
 
-Another algorithm we implemented is the stochastic hash where we store photons in a hash table. In this algorithm, we separate 3D space into small cells. Each cell. For each photon's position, we compute the cell it belongs to and hash it into the hash table. If there is more than one photon's at the same index, we just accumulate the photon count. Then we search for neighbors to compute final caustics at each hit position. This method increases variance since it ignores a lot of photons. This also introduces some noise to the final image. However, the results looks more natural, as we can see from the below image. This algorithm is also a lot more efficient than naive search. The time complexity is O(1) since we only need to find its neighbor.
+Another algorithm we implemented is the stochastic hash where we store photons in a hash table. In this algorithm, we separate 3D space into small cells. For each photon's position, we compute the cell it belongs to and hash it into the hash table. If there is more than one photon's at the same index, we just accumulate the photon count. Then we search for neighbors to compute final caustics at each hit position. This method increases variance since it ignores a lot of photons. This also introduces some noise to the final image. However, the results looks more natural, as we can see from the below image. This algorithm is also a lot more efficient than naive search. The time complexity is O(1) since we only need to find its neighbor.
 
 ### Stochastic Spatial Hashing Caustics
 
